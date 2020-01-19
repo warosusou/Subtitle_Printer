@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace Subtitle_Printer
 {
     public class MainView
     {
         public string Text { get; set; } = "Sample";
+        public FlowDocument Document { get; set; } = new FlowDocument(new Paragraph(new Run("test")));
 
         public int TextInsertCRLF(int pos)
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Subtitle_Printer
 {
@@ -30,10 +32,13 @@ namespace Subtitle_Printer
 
         private void TextBox_KeyUp(object sender, KeyEventArgs e)
         {
+            /*var index = TextBox.Document.ContentStart.GetOffsetToPosition(TextBox.Selection.Start) - 2;
+            var count = view.Document.Blocks.Count();
+            Debug.WriteLine(count.ToString());
             if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Shift)
             {
                 this.DataContext = new { Text = "aa" };
-            }
+            }*/
         }
 
         private void TextBox_PreviewDrop(object sender, DragEventArgs e)
