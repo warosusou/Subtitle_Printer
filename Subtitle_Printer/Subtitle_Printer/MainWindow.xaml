@@ -11,7 +11,15 @@
             <RowDefinition Height="Auto" MinHeight="44"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Margin="10,5,10,10" Document="{Binding Document}" Grid.Row="1" KeyUp="TextBox_KeyUp" PreviewDrop="TextBox_PreviewDrop"/>
+        <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Margin="10,5,10,10" Document="{Binding Document}" Grid.Row="1" KeyUp="TextBox_KeyUp" PreviewDrop="TextBox_PreviewDrop">
+            <local:BindableRichTextBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="切り取り" InputGestureText="Ctrl+X" Click="CutButton_Click" Command="ApplicationCommands.Cut"/>
+                    <MenuItem Header="コピー" InputGestureText="Ctrl+C" Command="ApplicationCommands.Copy"/>
+                    <MenuItem  Header="貼り付け" InputGestureText="Ctrl+V" Click="PasteButton_Click" Command="ApplicationCommands.Paste"/>
+                </ContextMenu>
+            </local:BindableRichTextBox.ContextMenu>
+        </local:BindableRichTextBox>
         <Menu Height="19" VerticalAlignment="Top">
             <MenuItem Header="ファイル(_F)">
                 <MenuItem Header="終了"/>
