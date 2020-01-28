@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto" MinHeight="44"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Margin="10,5,10,10" Document="{Binding Document}" Grid.Row="1" KeyUp="TextBox_KeyUp" PreviewDrop="TextBox_PreviewDrop">
+        <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Margin="10,5,10,10" Document="{Binding Document}" Grid.Row="1" KeyDown="TextBox_KeyDown" PreviewTextInput="TextBox_PreviewTextInput">
             <local:BindableRichTextBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="切り取り" InputGestureText="Ctrl+X" Click="CutButton_Click" Command="ApplicationCommands.Cut"/>

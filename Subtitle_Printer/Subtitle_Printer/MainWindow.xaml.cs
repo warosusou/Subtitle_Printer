@@ -34,14 +34,36 @@ namespace Subtitle_Printer
             this.DataContext = view;
         }
 
-        private void TextBox_KeyUp(object sender, KeyEventArgs e)
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            
+
         }
 
-        private void TextBox_PreviewDrop(object sender, DragEventArgs e)
+        private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            
+            /*var caretpos = TextBox.CaretPosition;
+            if (e.Text == "@")
+            {
+                e.Handled = true;
+                caretpos.InsertTextInRun("@@");
+                var range = new TextRange(caretpos, caretpos.GetPositionAtOffset("@@".Length));
+                range.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
+                TextBox.CaretPosition = caretpos.GetNextInsertionPosition(LogicalDirection.Forward);
+            }
+            else
+            {
+                e.Handled = true;
+                //TextBox.CaretPosition.GetNextContextPosition(LogicalDirection.Backward).GetNextContextPosition(LogicalDirection.Backward).InsertTextInRun(e.Text);
+                var right = TextBox.CaretPosition.GetNextContextPosition(LogicalDirection.Forward).GetNextContextPosition(LogicalDirection.Forward);
+                if (RichTextBoxUtil.GetLineIndex(right) != RichTextBoxUtil.GetLineIndex(caretpos) && !caretpos.IsAtLineStartPosition)
+                {
+                    TextBox.CaretPosition.InsertTextInRun(e.Text);
+                    var range = new TextRange(caretpos, caretpos.GetPositionAtOffset(e.Text.Length));
+                    range.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.White);
+                    if (caretpos.GetNextInsertionPosition(LogicalDirection.Forward) != null)
+                        TextBox.CaretPosition = caretpos.GetNextInsertionPosition(LogicalDirection.Forward);
+                }
+            }*/
         }
 
         private void CutButton_Click(object sender, RoutedEventArgs e)
