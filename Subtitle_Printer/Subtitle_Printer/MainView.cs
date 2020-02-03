@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace Subtitle_Printer
 {
@@ -11,18 +12,8 @@ namespace Subtitle_Printer
     {
         public string Text { get; set; } = "Sample";
         public FlowDocument Document { get; set; } = new FlowDocument(new Paragraph(new Run("test")));
-
-        public int TextInsertCRLF(int pos)
-        {
-            const string crlf = "\r\n";
-            Text.Insert(pos, crlf);
-            return (pos + crlf.Length);
-        }
-
-        public int TextInsert(int pos, string text)
-        {
-            Text.Insert(pos, text);
-            return (pos + text.Length);
-        }
+        public Brush MathBrushFore { get; } = Brushes.Blue;
+        public char MathSymbol { get; } = '@';
+        public char MathSymbolAlias { get; } = '＠';
     }
 }

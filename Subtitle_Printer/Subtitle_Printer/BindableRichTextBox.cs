@@ -23,7 +23,7 @@ namespace Subtitle_Printer
         public BindableRichTextBox()
         {
             VerticalTabs = new List<bool?> { null };
-            this.Document = new FlowDocument(new Paragraph());
+            //this.Document = new FlowDocument();
         }
 
         #region 依存関係プロパティ
@@ -52,22 +52,33 @@ namespace Subtitle_Printer
         {
             var control = sender as BindableRichTextBox;
 
-          if (!control.Selection.IsEmpty &&
-                Keyboard.Modifiers != ModifierKeys.Control &&
-                (
-                    e.Key == Key.Back ||
-                    e.Key == Key.Delete ||
-                    e.Key == Key.Enter ||
-                    e.Key == Key.Space ||
-                    ((int)Key.D0 <= (int)e.Key && (int)e.Key <= (int)Key.Z)))
+            if (!control.Selection.IsEmpty &&
+                  Keyboard.Modifiers != ModifierKeys.Control &&
+                  (
+                      e.Key == Key.Back ||
+                      e.Key == Key.Delete ||
+                      e.Key == Key.Enter ||
+                      e.Key == Key.Space ||
+                      ((int)Key.D0 <= (int)e.Key && (int)e.Key <= (int)Key.Z)))
             {
-                var startLine = GetLineIndex(control.Selection.Start);
-                var endLine = GetLineIndex(control.Selection.End);
-                for (int i = endLine - 1; i >= startLine; i--)
+                if (control.Selection.Text != "\r\n")
                 {
-                    control.VerticalTabs.RemoveAt(i);
+                    var startLine = RichTextBoxUtil.GetLineIndex(control.Selection.Start);
+                    var endLine = RichTextBoxUtil.GetLineIndex(control.Selection.End);
+                    for (int i = endLine - 1; i >= startLine; i--)
+                    {
+                        control.VerticalTabs.RemoveAt(i);
+                    }
+                    if (e.Key == Key.Enter) VerticalTabsModifier(control, Key.Enter, RichTextBoxUtil.ConvertKeyModifierToKey());
+                    return;
                 }
-                if (e.Key == Key.Enter) VerticalTabsModifier(control, Key.Enter,Key.None);
+                else
+                {
+                    control.Selection.Text = "";
+                    control.Selection.Select(control.CaretPosition.GetPositionAtOffset(-2), control.CaretPosition.GetPositionAtOffset(-2));
+                    if (e.Key == Key.Enter) VerticalTabsModifier(control, Key.Enter, RichTextBoxUtil.ConvertKeyModifierToKey());
+                    control.Selection.Select(control.CaretPosition.GetPositionAtOffset(2), control.CaretPosition.GetPositionAtOffset(2));
+                }
                 return;
             }
 
@@ -77,29 +88,13 @@ namespace Subtitle_Printer
                 e.Key != Key.Return &&
                 !(Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.V) &&
                 !(Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.X)) return;
-            var modifier = Key.None;
-            switch (Keyboard.Modifiers)
-            {
-                case ModifierKeys.Alt:
-                    modifier = Key.LeftAlt;
-                    break;
-                case ModifierKeys.Shift:
-                    modifier = Key.LeftShift;
-                    break;
-                case ModifierKeys.Control:
-                    modifier = Key.LeftCtrl;
-                    break;
-                case ModifierKeys.Windows:
-                    modifier = Key.LWin;
-                    break;
-            }
-            VerticalTabsModifier(control, e.Key,modifier);
+            VerticalTabsModifier(control, e.Key, RichTextBoxUtil.ConvertKeyModifierToKey());
         }
         #endregion  // イベントハンドラ
 
-        internal static void VerticalTabsModifier(BindableRichTextBox control, Key key,Key modifier)
+        internal static void VerticalTabsModifier(BindableRichTextBox control, Key key, Key modifier)
         {
-            var lineIndex = GetLineIndex(control.CaretPosition);
+            var lineIndex = RichTextBoxUtil.GetLineIndex(control.CaretPosition);
             switch (key)
             {
                 case Key.Back:
@@ -113,7 +108,7 @@ namespace Subtitle_Printer
                     control.VerticalTabs.RemoveAt(lineIndex);
                     break;
                 case Key.Return:
-                    if (modifier != Key.LeftShift || modifier != Key.RightShift)
+                    if (modifier != Key.LeftShift && modifier != Key.RightShift)
                     {
                         control.VerticalTabs.Insert(lineIndex, false);
                     }
@@ -143,18 +138,22 @@ namespace Subtitle_Printer
                     }
                     break;
                 case Key.X:
-                    var startLine = GetLineIndex(control.Selection.Start);
-                    var endLine = GetLineIndex(control.Selection.End);
-                    for (int i = endLine -1; i >= startLine; i--)
+                    var startLine = RichTextBoxUtil.GetLineIndex(control.Selection.Start);
+                    var endLine = RichTextBoxUtil.GetLineIndex(control.Selection.End);
+                    for (int i = endLine - 1; i >= startLine; i--)
                     {
                         if (control.VerticalTabs[i] != null) control.VerticalTabs.RemoveAt(i);
                     }
                     break;
             }
         }
+    }
 
-        private static int GetLineIndex(TextPointer position)
+    public static class RichTextBoxUtil
+    {
+        public static int GetLineIndex(TextPointer position)
         {
+            if (position == null) return -1;
             int lineIndex = 0;
 
             var rangeFromStartToPosition = new TextRange(position.DocumentStart, position);
@@ -166,6 +165,42 @@ namespace Subtitle_Printer
                 else linefeed = false;
             }
             return lineIndex;
+        }
+
+        public static TextPointer GetPointerByCharCount(TextPointer reference,int stringLength)
+        {
+            LogicalDirection direction;
+            var text = new TextRange(reference.DocumentStart, reference.DocumentEnd).Text;
+            if (stringLength > 0) direction = LogicalDirection.Forward;
+            else direction = LogicalDirection.Backward;
+            for(int i = 0; i < Math.Abs(stringLength); i++)
+            {
+                var t = reference.GetNextInsertionPosition(direction);
+                if (t == null) return null;
+                reference = t;
+            }
+            return reference;
+        }
+
+        public static Key ConvertKeyModifierToKey()
+        {
+            Key modifier = Key.None;
+            switch (Keyboard.Modifiers)
+            {
+                case ModifierKeys.Alt:
+                    modifier = Key.LeftAlt;
+                    break;
+                case ModifierKeys.Shift:
+                    modifier = Key.LeftShift;
+                    break;
+                case ModifierKeys.Control:
+                    modifier = Key.LeftCtrl;
+                    break;
+                case ModifierKeys.Windows:
+                    modifier = Key.LWin;
+                    break;
+            }
+            return modifier;
         }
     }
 }

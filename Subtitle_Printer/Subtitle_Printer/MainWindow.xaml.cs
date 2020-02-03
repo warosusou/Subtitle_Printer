@@ -16,8 +16,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using Util = Subtitle_Printer.RichTextBoxUtil;
 
 namespace Subtitle_Printer
 {
@@ -34,36 +34,120 @@ namespace Subtitle_Printer
             this.DataContext = view;
         }
 
-        private void TextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-
-        }
-
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            /*var caretpos = TextBox.CaretPosition;
-            if (e.Text == "@")
+            var caretPos = TextBox.CaretPosition;
+            var symbol = view.MathSymbol.ToString();
+            var run = caretPos.Parent as Run;
+            var newRun = new Run();
+            if (TextBox.Selection.Text == "\r\n")
             {
+                run = caretPos.GetNextInsertionPosition(LogicalDirection.Backward).Parent as Run;
+                caretPos = run.ElementEnd;
+            }
+            if (e.Text == symbol || e.Text == view.MathSymbolAlias.ToString())
+            {
+                var insert = symbol + symbol;
                 e.Handled = true;
-                caretpos.InsertTextInRun("@@");
-                var range = new TextRange(caretpos, caretpos.GetPositionAtOffset("@@".Length));
-                range.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Black);
-                TextBox.CaretPosition = caretpos.GetNextInsertionPosition(LogicalDirection.Forward);
+                if (e.Text == view.MathSymbolAlias.ToString())
+                    caretPos.DeleteTextInRun(-1);
+                if (caretPos.GetOffsetToPosition(run.ContentStart) != 0 && caretPos.GetOffsetToPosition(run.ContentEnd) != 0)
+                {
+                    var i = run;
+                    var forword = new TextRange(run.ContentStart, caretPos);
+                    var behind = new TextRange(caretPos, run.ContentEnd);
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(forword.Text));
+                    i = i.NextInline as Run;
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(behind.Text));
+                    caretPos.Paragraph.Inlines.Remove(run);
+                    run = i;
+                    caretPos = run.ContentEnd;
+                }
+                newRun.Text = insert;
+                newRun.Foreground = view.MathBrushFore;
+                if (caretPos.IsAtLineStartPosition)
+                {
+                    if (caretPos.Paragraph.Inlines.FirstInline.Foreground == view.MathBrushFore)
+                        caretPos.Paragraph.Inlines.Remove(caretPos.Paragraph.Inlines.FirstInline);
+                    caretPos.Paragraph.Inlines.InsertBefore(run, newRun);
+                    caretPos.Paragraph.Inlines.InsertBefore(newRun, new Run { Foreground = TextBox.Foreground });
+                    TextBox.CaretPosition = caretPos.GetNextInsertionPosition(LogicalDirection.Backward);
+                }
+                else
+                {
+                    caretPos.Paragraph.Inlines.InsertAfter(run, newRun);
+                    caretPos.Paragraph.Inlines.InsertAfter(newRun, new Run { Foreground = TextBox.Foreground });
+                    TextBox.CaretPosition = caretPos.GetNextInsertionPosition(LogicalDirection.Forward);
+                }
             }
             else
             {
-                e.Handled = true;
-                //TextBox.CaretPosition.GetNextContextPosition(LogicalDirection.Backward).GetNextContextPosition(LogicalDirection.Backward).InsertTextInRun(e.Text);
-                var right = TextBox.CaretPosition.GetNextContextPosition(LogicalDirection.Forward).GetNextContextPosition(LogicalDirection.Forward);
-                if (RichTextBoxUtil.GetLineIndex(right) != RichTextBoxUtil.GetLineIndex(caretpos) && !caretpos.IsAtLineStartPosition)
+                if (run.Text.StartsWith(symbol) && run.Text.EndsWith(symbol) && run.Text.Count(x => x == view.MathSymbol) == 2)
                 {
-                    TextBox.CaretPosition.InsertTextInRun(e.Text);
-                    var range = new TextRange(caretpos, caretpos.GetPositionAtOffset(e.Text.Length));
-                    range.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.White);
-                    if (caretpos.GetNextInsertionPosition(LogicalDirection.Forward) != null)
-                        TextBox.CaretPosition = caretpos.GetNextInsertionPosition(LogicalDirection.Forward);
+                    if (caretPos.GetOffsetToPosition(run.ContentStart) == 0)
+                    {
+                        if (run.PreviousInline == null || Util.GetLineIndex(run.ContentStart) != Util.GetLineIndex(run.PreviousInline.ContentStart))
+                        {
+                            newRun.Foreground = TextBox.Foreground;
+                            newRun.Text = e.Text;
+                            e.Handled = true;
+                            caretPos.Paragraph.Inlines.InsertBefore(run, newRun);
+                            TextBox.CaretPosition = newRun.ElementEnd;
+                        }
+                        else if (run.PreviousInline != null && (run.PreviousInline as Run).Text.StartsWith(symbol) && (run.PreviousInline as Run).Text.EndsWith(symbol))
+                        {
+                            newRun.Foreground = TextBox.Foreground;
+                            newRun.Text = e.Text;
+                            e.Handled = true;
+                            caretPos.Paragraph.Inlines.InsertBefore(run, newRun);
+                            TextBox.CaretPosition = newRun.ElementEnd;
+                        }
+                        else
+                        {
+                            TextBox.CaretPosition = run.PreviousInline.ElementEnd;
+                        }
+                    }
+                    else if (caretPos.GetOffsetToPosition(run.ContentEnd) == 0)
+                    {
+                        if (run.NextInline == null || Util.GetLineIndex(run.ContentStart) != Util.GetLineIndex(run.NextInline.ContentStart))
+                        {
+                            newRun.Foreground = TextBox.Foreground;
+                            newRun.Text = e.Text;
+                            e.Handled = true;
+                            caretPos.Paragraph.Inlines.InsertAfter(run, newRun);
+                            TextBox.CaretPosition = newRun.ElementStart;
+                        }
+                        else if (run.NextInline != null && (run.NextInline as Run).Text.StartsWith(symbol) && (run.NextInline as Run).Text.EndsWith(symbol))
+                        {
+                            newRun.Foreground = TextBox.Foreground;
+                            newRun.Text = e.Text;
+                            e.Handled = true;
+                            caretPos.Paragraph.Inlines.InsertAfter(run, newRun);
+                            TextBox.CaretPosition = newRun.ElementEnd;
+                        }
+                        else
+                        {
+                            TextBox.CaretPosition = run.NextInline.ElementStart;
+                        }
+                    }
                 }
-            }*/
+                else if (run.Text.Count(x => x == view.MathSymbol) > 2)
+                {
+                    e.Handled = true;
+                    var i = run;
+                    var forword = new TextRange(run.ContentStart, caretPos);
+                    var behind = new TextRange(caretPos, run.ContentEnd);
+                    if (!forword.Text.EndsWith(symbol) && !behind.Text.StartsWith(symbol)) return;
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(forword.Text) { Foreground = view.MathBrushFore });
+                    i = i.NextInline as Run;
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(e.Text));
+                    i = i.NextInline as Run;
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(behind.Text) { Foreground = view.MathBrushFore });
+                    caretPos.Paragraph.Inlines.Remove(run);
+                    run = i;
+                    TextBox.CaretPosition = run.ContentEnd;
+                }
+            }
         }
 
         private void CutButton_Click(object sender, RoutedEventArgs e)
@@ -75,6 +159,16 @@ namespace Subtitle_Printer
         private void PasteButton_Click(object sender, RoutedEventArgs e)
         {
             BindableRichTextBox.VerticalTabsModifier(TextBox, Key.V, Key.LeftCtrl);
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            e.Handled = true;
+            for (int i = 0; i < e.Changes.First().AddedLength; ++i)
+            {
+                TextBox.CaretPosition = TextBox.CaretPosition.GetNextInsertionPosition(LogicalDirection.Forward);
+            }
+            TextBox.TextChanged -= TextBox_TextChanged;
         }
     }
 }
