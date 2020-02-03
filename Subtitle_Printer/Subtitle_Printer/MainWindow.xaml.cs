@@ -36,6 +36,19 @@ namespace Subtitle_Printer
 
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
+            if (e.Text == "") return;
+            if (e.Text.Length > 1)
+            {
+                e.Handled = true;
+                for (int i = 0; i < e.Text.Length; i++)
+                {
+                    var composition = new TextComposition(InputManager.Current, (BindableRichTextBox)sender, e.Text[i].ToString());
+                    var ne = new TextCompositionEventArgs(e.Device, composition);
+                    ne.RoutedEvent = e.RoutedEvent;
+                    ne.Source = e.Source;
+                    TextBox_PreviewTextInput(sender, ne);
+                }
+            }
             var caretPos = TextBox.CaretPosition;
             var symbol = view.MathSymbol.ToString();
             var run = caretPos.Parent as Run;
@@ -79,6 +92,7 @@ namespace Subtitle_Printer
                     caretPos.Paragraph.Inlines.InsertAfter(newRun, new Run { Foreground = TextBox.Foreground });
                     TextBox.CaretPosition = caretPos.GetNextInsertionPosition(LogicalDirection.Forward);
                 }
+                InputMethod.Current.ImeSentenceMode = ImeSentenceModeValues.Conversation;
             }
             else
             {
@@ -150,6 +164,57 @@ namespace Subtitle_Printer
             }
         }
 
+        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            var run = TextBox.CaretPosition.Parent as Run;
+            if(run.Text.Contains(view.MathSymbol))
+            {
+                if(TextBox.CaretPosition == run.ElementStart)
+                {
+                    if (run.PreviousInline == null)
+                        TextBox.CaretPosition.Paragraph.Inlines.InsertBefore(run, new Run() { Foreground = TextBox.Foreground });
+                    var previous = run.PreviousInline;
+                    TextBox.CaretPosition = previous.ElementEnd;
+                }
+                else
+                {
+                    if (run.NextInline == null)
+                        TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(run, new Run() { Foreground = TextBox.Foreground });
+                    var next = run.NextInline;
+                    TextBox.CaretPosition = next.ElementStart;
+                }
+            }
+            ColorCoordinator();
+            if (InputMethod.Current.ImeState == InputMethodState.On && (e.ImeProcessedKey == Key.Oem3 || (e.ImeProcessedKey == Key.D2 && Keyboard.Modifiers == ModifierKeys.Shift)))
+            {
+                InputMethod.Current.ImeSentenceMode = ImeSentenceModeValues.None;
+            }
+        }
+
+        private void ColorCoordinator()
+        {
+            var lineStart = TextBox.CaretPosition.GetLineStartPosition(0).GetNextInsertionPosition(LogicalDirection.Forward);
+            var lineEnd = TextBox.CaretPosition.GetLineStartPosition(1);
+            if (lineEnd == null)
+                lineEnd = lineStart.DocumentEnd;
+            else
+                lineEnd = lineEnd.GetNextInsertionPosition(LogicalDirection.Backward);
+            var index = lineStart.Parent as Run;
+            var last = lineEnd.Parent as Run;
+            while (true)
+            {
+                if (index == null)
+                    break;
+                if (index.Text.StartsWith(view.MathSymbol.ToString()) && index.Text.EndsWith(view.MathSymbol.ToString()) && index.Foreground != view.MathBrushFore)
+                    index.Foreground = view.MathBrushFore;
+                else if (!index.Text.Contains(view.MathSymbol) && index.Foreground != TextBox.Foreground)
+                    index.Foreground = TextBox.Foreground;
+                if (index == last)
+                    break;
+                index = index.NextInline as Run;
+            }
+        }
+
         private void CutButton_Click(object sender, RoutedEventArgs e)
         {
             BindableRichTextBox.VerticalTabsModifier(TextBox, Key.X, Key.LeftCtrl);
@@ -159,16 +224,6 @@ namespace Subtitle_Printer
         private void PasteButton_Click(object sender, RoutedEventArgs e)
         {
             BindableRichTextBox.VerticalTabsModifier(TextBox, Key.V, Key.LeftCtrl);
-        }
-
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            e.Handled = true;
-            for (int i = 0; i < e.Changes.First().AddedLength; ++i)
-            {
-                TextBox.CaretPosition = TextBox.CaretPosition.GetNextInsertionPosition(LogicalDirection.Forward);
-            }
-            TextBox.TextChanged -= TextBox_TextChanged;
         }
     }
 }
