@@ -11,21 +11,28 @@
             <RowDefinition Height="Auto" MinHeight="44"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Margin="10,5,10,10" Document="{Binding Document}" Grid.Row="1" PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown">
-            <local:BindableRichTextBox.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="切り取り" InputGestureText="Ctrl+X" Click="CutButton_Click" Command="ApplicationCommands.Cut"/>
-                    <MenuItem Header="コピー" InputGestureText="Ctrl+C" Command="ApplicationCommands.Copy"/>
-                    <MenuItem  Header="貼り付け" InputGestureText="Ctrl+V" Click="PasteButton_Click" Command="ApplicationCommands.Paste"/>
-                </ContextMenu>
-            </local:BindableRichTextBox.ContextMenu>
-        </local:BindableRichTextBox>
         <Menu Height="19" VerticalAlignment="Top">
             <MenuItem Header="ファイル(_F)">
                 <MenuItem Header="終了"/>
             </MenuItem>
         </Menu>
         <Button Content="{Binding Text}" HorizontalAlignment="Left" Margin="10,24,0,0" Width="75" Height="20" VerticalAlignment="Top"/>
+        <Grid HorizontalAlignment="Left" Height="358" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="774">
+            <ScrollViewer  Name="LineNumberScrollViewer" HorizontalAlignment="Left" Height="358" VerticalAlignment="Top" Width="85" VerticalScrollBarVisibility="Hidden">
+                <local:BindableRichTextBox x:Name ="LineNumberTextBox"  Width="31" Height="358" Block.LineHeight="1"/>
+            </ScrollViewer>
+            <ScrollViewer Name="TextBoxScrollViewer" Margin="146,0,0,0" ScrollChanged="TextBoxScrollViewer_ScrollChanged">
+                <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Document="{Binding Document}" PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" SizeChanged="TextBox_SizeChanged" VerticalTabsChanged="TextBox_VerticalTabsChanged" AutoWordSelection="False" VerticalScrollBarVisibility="Auto" Width="628">
+                    <local:BindableRichTextBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="切り取り" InputGestureText="Ctrl+X" Click="CutButton_Click" Command="ApplicationCommands.Cut"/>
+                            <MenuItem Header="コピー" InputGestureText="Ctrl+C" Command="ApplicationCommands.Copy"/>
+                            <MenuItem  Header="貼り付け" InputGestureText="Ctrl+V" Click="PasteButton_Click" Command="ApplicationCommands.Paste"/>
+                        </ContextMenu>
+                    </local:BindableRichTextBox.ContextMenu>
+                </local:BindableRichTextBox>
+            </ScrollViewer>
+        </Grid>
 
     </Grid>
 </Window>

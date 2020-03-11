@@ -32,10 +32,83 @@ namespace Subtitle_Printer
             InitializeComponent();
             view = new MainView();
             this.DataContext = view;
+            TextBox_VerticalTabsChanged(TextBox, new VerticalTabsChangedEventArgs(false, new List<int> { 0 }));
+            LineNumberTextBox.Width = new FormattedText(
+                "0123456789",
+                System.Globalization.CultureInfo.CurrentCulture,
+                System.Windows.FlowDirection.LeftToRight,
+                new Typeface(
+                    LineNumberTextBox.FontFamily,
+                    FontStyles.Normal,
+                    FontWeights.Normal,
+                    FontStretches.Normal
+                    ),
+                LineNumberTextBox.FontSize,
+                Brushes.Black,
+                VisualTreeHelper.GetDpi(this).PixelsPerDip
+                ).Width;
+        }
+
+        private void TextBox_VerticalTabsChanged(object sender, VerticalTabsChangedEventArgs e)
+        {
+            int paragraphNum = 1;
+            int inlineNum = 0;
+            var paragraph = new Paragraph();
+            var tabs = TextBox.VerticalTabs;
+            var fd = new FlowDocument();
+            for (int i = 0; ; i++)
+            {
+                if (tabs[i] == true)
+                {
+                    if (paragraph.Inlines.Count != 0)
+                        paragraph.Inlines.Add(new LineBreak());
+                    paragraph.Inlines.Add(new Run(String.Format("{0}-{1}", paragraphNum, alphabetCalc(inlineNum))));
+                    inlineNum++;
+                }
+                else
+                {
+                    if (i > 0 && tabs[i - 1] == true)
+                    {
+                        if (paragraph.Inlines.Count != 0)
+                            paragraph.Inlines.Add(new LineBreak());
+                        paragraph.Inlines.Add(new Run(String.Format("{0}-{1}", paragraphNum, alphabetCalc(inlineNum))));
+                        fd.Blocks.Add(paragraph);
+                        paragraph = new Paragraph();
+                        inlineNum = 0;
+                        paragraphNum++;
+                    }
+                    else
+                    {
+                        paragraph = new Paragraph(new Run(String.Format("{0}", paragraphNum)));
+                        fd.Blocks.Add(paragraph);
+                        paragraph = new Paragraph();
+                        inlineNum = 0;
+                        paragraphNum++;
+                    }
+                }
+                if (i >= tabs.Count - 1)
+                    break;
+            }
+            LineNumberTextBox.Document = fd;
+
+            string alphabetCalc(int num)
+            {
+                string result = "";
+                //A == 0, Z == 25
+                while (true)
+                {
+                    char c = (char)((num % 26) + 'A');
+                    result = result.Insert(0, c.ToString());
+                    num = num / 26 - 1;
+                    if (num == -1) break;
+                }
+                return result;
+            }
         }
 
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
+            /*
             if (e.Text == "") return;
             if (e.Text.Length > 1)
             {
@@ -162,14 +235,16 @@ namespace Subtitle_Printer
                     TextBox.CaretPosition = run.ContentEnd;
                 }
             }
+        */
         }
 
         private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             var run = TextBox.CaretPosition.Parent as Run;
-            if(run.Text.Contains(view.MathSymbol))
+            if (run == null) return;
+            if (run.Text.Contains(view.MathSymbol))
             {
-                if(TextBox.CaretPosition == run.ElementStart)
+                if (TextBox.CaretPosition == run.ElementStart)
                 {
                     if (run.PreviousInline == null)
                         TextBox.CaretPosition.Paragraph.Inlines.InsertBefore(run, new Run() { Foreground = TextBox.Foreground });
@@ -215,6 +290,11 @@ namespace Subtitle_Printer
             }
         }
 
+        private void TextBox_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            LineNumberTextBox.Height = TextBox.ActualHeight;
+        }
+
         private void CutButton_Click(object sender, RoutedEventArgs e)
         {
             BindableRichTextBox.VerticalTabsModifier(TextBox, Key.X, Key.LeftCtrl);
@@ -224,6 +304,11 @@ namespace Subtitle_Printer
         private void PasteButton_Click(object sender, RoutedEventArgs e)
         {
             BindableRichTextBox.VerticalTabsModifier(TextBox, Key.V, Key.LeftCtrl);
+        }
+
+        private void TextBoxScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            LineNumberScrollViewer.ScrollToVerticalOffset(TextBoxScrollViewer.VerticalOffset);
         }
     }
 }
