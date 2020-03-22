@@ -12,8 +12,10 @@ namespace Subtitle_Printer
     {
         public string Text { get; set; } = "Sample";
         public FlowDocument Document { get; set; } = new FlowDocument(new Paragraph(new Run("test")));
-        public Brush MathBrushFore { get; } = Brushes.Blue;
+        public Brush MathBrushFore { get; } = Brushes.White;
+        public Brush MathBrushBack { get; } = Brushes.Blue;
         public char MathSymbol { get; } = '@';
         public char MathSymbolAlias { get; } = '＠';
+        internal bool InMathContext { get; set; } = false;
     }
 }

@@ -18,7 +18,7 @@ namespace Subtitle_Printer
 
         static BindableRichTextBox()
         {
-            EventManager.RegisterClassHandler(typeof(BindableRichTextBox), PreviewKeyDownEvent, new KeyEventHandler(OnPreviewKeyDown), false);
+            EventManager.RegisterClassHandler(typeof(BindableRichTextBox), KeyDownEvent, new KeyEventHandler(OnKeyDown), false);
             EventManager.RegisterClassHandler(typeof(BindableRichTextBox), MouseUpEvent, new MouseButtonEventHandler(OnMouseUp), false);
         }
 
@@ -54,7 +54,7 @@ namespace Subtitle_Printer
             }
         }
 
-        private static void OnPreviewKeyDown(object sender, KeyEventArgs e)
+        private static void OnKeyDown(object sender, KeyEventArgs e)
         {
             var control = sender as BindableRichTextBox;
 
@@ -100,9 +100,9 @@ namespace Subtitle_Printer
                 (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.V) ||
                 (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.X))
                 VerticalTabsModifier(control, e.Key, RichTextBoxUtil.ConvertKeyModifierToKey());
-            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Shift)
+            /*if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Shift)
                 e.Handled = true;
-        }
+        */}
 
         private static void OnMouseUp(object sender, MouseEventArgs e)
         {
@@ -177,8 +177,8 @@ namespace Subtitle_Printer
                     }
                     else
                     {
-                        control.Document.Blocks.InsertAfter(control.CaretPosition.Paragraph, new Paragraph(new Run("")));
-                        control.CaretPosition = control.CaretPosition.GetNextInsertionPosition(LogicalDirection.Forward);
+                        /*control.Document.Blocks.InsertAfter(control.CaretPosition.Paragraph, new Paragraph(new Run("")));
+                        control.CaretPosition = control.CaretPosition.GetNextInsertionPosition(LogicalDirection.Forward);*/
                         verticalTabs.Insert(control.LineIndex, true);
                         control.LineIndex++;
                         control.LineCount++;

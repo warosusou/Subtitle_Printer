@@ -22,7 +22,7 @@
                 <local:BindableRichTextBox x:Name ="LineNumberTextBox"  Width="31" Height="358" Block.LineHeight="1"/>
             </ScrollViewer>
             <ScrollViewer Name="TextBoxScrollViewer" Margin="146,0,0,0" ScrollChanged="TextBoxScrollViewer_ScrollChanged">
-                <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Document="{Binding Document}" PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" SizeChanged="TextBox_SizeChanged" VerticalTabsChanged="TextBox_VerticalTabsChanged" AutoWordSelection="False" VerticalScrollBarVisibility="Auto" Width="628">
+                <local:BindableRichTextBox x:Name="TextBox" Block.LineHeight="1" Document="{Binding Document}" PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" SizeChanged="TextBox_SizeChanged" VerticalTabsChanged="TextBox_VerticalTabsChanged" AutoWordSelection="False" VerticalScrollBarVisibility="Auto" Width="628" KeyUp="TextBox_KeyUp">
                     <local:BindableRichTextBox.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="切り取り" InputGestureText="Ctrl+X" Click="CutButton_Click" Command="ApplicationCommands.Cut"/>

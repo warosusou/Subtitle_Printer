@@ -108,7 +108,7 @@ namespace Subtitle_Printer
 
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            /*
+
             if (e.Text == "") return;
             if (e.Text.Length > 1)
             {
@@ -125,15 +125,18 @@ namespace Subtitle_Printer
             var caretPos = TextBox.CaretPosition;
             var symbol = view.MathSymbol.ToString();
             var run = caretPos.Parent as Run;
-            var newRun = new Run();
+            var newRunLeft = new Run();
+            var newRunRight = new Run();
             if (TextBox.Selection.Text == "\r\n")
             {
                 run = caretPos.GetNextInsertionPosition(LogicalDirection.Backward).Parent as Run;
                 caretPos = run.ElementEnd;
             }
+            if (run == null)
+                return;
             if (e.Text == symbol || e.Text == view.MathSymbolAlias.ToString())
             {
-                var insert = symbol + symbol;
+                var insert = symbol;
                 e.Handled = true;
                 if (e.Text == view.MathSymbolAlias.ToString())
                     caretPos.DeleteTextInRun(-1);
@@ -149,20 +152,27 @@ namespace Subtitle_Printer
                     run = i;
                     caretPos = run.ContentEnd;
                 }
-                newRun.Text = insert;
-                newRun.Foreground = view.MathBrushFore;
+                newRunLeft.Text = insert;
+                newRunLeft.Background = view.MathBrushBack;
+                newRunLeft.Foreground = view.MathBrushFore;
+                newRunRight.Text = insert;
+                newRunRight.Background = view.MathBrushBack;
+                newRunRight.Foreground = view.MathBrushFore;
+
                 if (caretPos.IsAtLineStartPosition)
                 {
-                    if (caretPos.Paragraph.Inlines.FirstInline.Foreground == view.MathBrushFore)
+                    if (caretPos.Paragraph.Inlines.FirstInline.Background == view.MathBrushBack)
                         caretPos.Paragraph.Inlines.Remove(caretPos.Paragraph.Inlines.FirstInline);
-                    caretPos.Paragraph.Inlines.InsertBefore(run, newRun);
-                    caretPos.Paragraph.Inlines.InsertBefore(newRun, new Run { Foreground = TextBox.Foreground });
+                    caretPos.Paragraph.Inlines.InsertBefore(run, newRunLeft);
+                    caretPos.Paragraph.Inlines.InsertBefore(newRunLeft, newRunRight);
+                    caretPos.Paragraph.Inlines.InsertBefore(newRunRight, new Run { Background = TextBox.Background });
                     TextBox.CaretPosition = caretPos.GetNextInsertionPosition(LogicalDirection.Backward);
                 }
                 else
                 {
-                    caretPos.Paragraph.Inlines.InsertAfter(run, newRun);
-                    caretPos.Paragraph.Inlines.InsertAfter(newRun, new Run { Foreground = TextBox.Foreground });
+                    caretPos.Paragraph.Inlines.InsertAfter(run, newRunLeft);
+                    caretPos.Paragraph.Inlines.InsertAfter(newRunLeft, newRunRight);
+                    caretPos.Paragraph.Inlines.InsertAfter(newRunRight, new Run { Background = TextBox.Background });
                     TextBox.CaretPosition = caretPos.GetNextInsertionPosition(LogicalDirection.Forward);
                 }
                 InputMethod.Current.ImeSentenceMode = ImeSentenceModeValues.Conversation;
@@ -175,19 +185,19 @@ namespace Subtitle_Printer
                     {
                         if (run.PreviousInline == null || Util.GetLineIndex(run.ContentStart) != Util.GetLineIndex(run.PreviousInline.ContentStart))
                         {
-                            newRun.Foreground = TextBox.Foreground;
-                            newRun.Text = e.Text;
+                            newRunLeft.Background = TextBox.Background;
+                            newRunLeft.Text = e.Text;
                             e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertBefore(run, newRun);
-                            TextBox.CaretPosition = newRun.ElementEnd;
+                            caretPos.Paragraph.Inlines.InsertBefore(run, newRunLeft);
+                            TextBox.CaretPosition = newRunLeft.ElementEnd;
                         }
                         else if (run.PreviousInline != null && (run.PreviousInline as Run).Text.StartsWith(symbol) && (run.PreviousInline as Run).Text.EndsWith(symbol))
                         {
-                            newRun.Foreground = TextBox.Foreground;
-                            newRun.Text = e.Text;
+                            newRunLeft.Background = TextBox.Background;
+                            newRunLeft.Text = e.Text;
                             e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertBefore(run, newRun);
-                            TextBox.CaretPosition = newRun.ElementEnd;
+                            caretPos.Paragraph.Inlines.InsertBefore(run, newRunLeft);
+                            TextBox.CaretPosition = newRunLeft.ElementEnd;
                         }
                         else
                         {
@@ -198,19 +208,19 @@ namespace Subtitle_Printer
                     {
                         if (run.NextInline == null || Util.GetLineIndex(run.ContentStart) != Util.GetLineIndex(run.NextInline.ContentStart))
                         {
-                            newRun.Foreground = TextBox.Foreground;
-                            newRun.Text = e.Text;
+                            newRunLeft.Background = TextBox.Background;
+                            newRunLeft.Text = e.Text;
                             e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertAfter(run, newRun);
-                            TextBox.CaretPosition = newRun.ElementStart;
+                            caretPos.Paragraph.Inlines.InsertAfter(run, newRunLeft);
+                            TextBox.CaretPosition = newRunLeft.ElementStart;
                         }
                         else if (run.NextInline != null && (run.NextInline as Run).Text.StartsWith(symbol) && (run.NextInline as Run).Text.EndsWith(symbol))
                         {
-                            newRun.Foreground = TextBox.Foreground;
-                            newRun.Text = e.Text;
+                            newRunLeft.Background = TextBox.Background;
+                            newRunLeft.Text = e.Text;
                             e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertAfter(run, newRun);
-                            TextBox.CaretPosition = newRun.ElementEnd;
+                            caretPos.Paragraph.Inlines.InsertAfter(run, newRunLeft);
+                            TextBox.CaretPosition = newRunLeft.ElementEnd;
                         }
                         else
                         {
@@ -225,69 +235,121 @@ namespace Subtitle_Printer
                     var forword = new TextRange(run.ContentStart, caretPos);
                     var behind = new TextRange(caretPos, run.ContentEnd);
                     if (!forword.Text.EndsWith(symbol) && !behind.Text.StartsWith(symbol)) return;
-                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(forword.Text) { Foreground = view.MathBrushFore });
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(forword.Text) { Background = view.MathBrushBack });
                     i = i.NextInline as Run;
                     caretPos.Paragraph.Inlines.InsertAfter(i, new Run(e.Text));
                     i = i.NextInline as Run;
-                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(behind.Text) { Foreground = view.MathBrushFore });
+                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(behind.Text) { Background = view.MathBrushBack });
                     caretPos.Paragraph.Inlines.Remove(run);
                     run = i;
                     TextBox.CaretPosition = run.ContentEnd;
                 }
             }
-        */
+
         }
 
         private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (view.InMathContext && e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                return;
+            }
             var run = TextBox.CaretPosition.Parent as Run;
             if (run == null) return;
             if (run.Text.Contains(view.MathSymbol))
             {
-                if (TextBox.CaretPosition == run.ElementStart)
+                if (TextBox.CaretPosition.GetOffsetToPosition(run.ContentStart) == 0)
                 {
                     if (run.PreviousInline == null)
-                        TextBox.CaretPosition.Paragraph.Inlines.InsertBefore(run, new Run() { Foreground = TextBox.Foreground });
+                        TextBox.CaretPosition.Paragraph.Inlines.InsertBefore(run, new Run() { Background = TextBox.Background });
                     var previous = run.PreviousInline;
                     TextBox.CaretPosition = previous.ElementEnd;
                 }
-                else
+                else if (TextBox.CaretPosition.GetOffsetToPosition(run.ContentEnd) == 0)
                 {
                     if (run.NextInline == null)
-                        TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(run, new Run() { Foreground = TextBox.Foreground });
+                        TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(run, new Run() { Background = TextBox.Background });
                     var next = run.NextInline;
                     TextBox.CaretPosition = next.ElementStart;
                 }
             }
-            ColorCoordinator();
             if (InputMethod.Current.ImeState == InputMethodState.On && (e.ImeProcessedKey == Key.Oem3 || (e.ImeProcessedKey == Key.D2 && Keyboard.Modifiers == ModifierKeys.Shift)))
             {
                 InputMethod.Current.ImeSentenceMode = ImeSentenceModeValues.None;
             }
         }
 
+        private void TextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            ColorCoordinator();
+        }
+
         private void ColorCoordinator()
         {
             var lineStart = TextBox.CaretPosition.GetLineStartPosition(0).GetNextInsertionPosition(LogicalDirection.Forward);
+            if (lineStart == null) return;
             var lineEnd = TextBox.CaretPosition.GetLineStartPosition(1);
             if (lineEnd == null)
-                lineEnd = lineStart.DocumentEnd;
+                lineEnd = (lineStart.Paragraph.Inlines.LastInline as Run).ContentEnd;
             else
                 lineEnd = lineEnd.GetNextInsertionPosition(LogicalDirection.Backward);
             var index = lineStart.Parent as Run;
             var last = lineEnd.Parent as Run;
+            bool isInsideMarker = false;
             while (true)
             {
                 if (index == null)
                     break;
-                if (index.Text.StartsWith(view.MathSymbol.ToString()) && index.Text.EndsWith(view.MathSymbol.ToString()) && index.Foreground != view.MathBrushFore)
+                if (index.Text.StartsWith(view.MathSymbol.ToString()) && index.Text.Length != 1)
+                {
+                    var surplus = index.Text.Substring(1);
+                    index.Text = view.MathSymbol.ToString();
+                    TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(index, new Run(surplus));
+                }
+                if (index.Text.StartsWith(view.MathSymbol.ToString()) && index.Text.EndsWith(view.MathSymbol.ToString()) && index.Background != view.MathBrushBack)
+                {
+                    index.Background = view.MathBrushBack;
                     index.Foreground = view.MathBrushFore;
-                else if (!index.Text.Contains(view.MathSymbol) && index.Foreground != TextBox.Foreground)
+                }
+                else if (!index.Text.Contains(view.MathSymbol) && index.Background != TextBox.Background)
+                {
+                    index.Background = TextBox.Background;
                     index.Foreground = TextBox.Foreground;
+                }
+                if (index != lineStart.Parent as Run && index != last)
+                {
+                    if (index.Text == view.MathSymbol.ToString() && isInsideMarker == false)
+                    {
+                        isInsideMarker = true;
+                        index.Background = view.MathBrushBack;
+                        index.Foreground = view.MathBrushFore;
+                    }
+                    else if (index.Text == view.MathSymbol.ToString() && isInsideMarker == true)
+                    {
+                        isInsideMarker = false;
+                        index.Background = view.MathBrushBack;
+                        index.Foreground = view.MathBrushFore;
+                    }
+                }
+                if (isInsideMarker)
+                {
+                    index.Background = view.MathBrushBack;
+                    index.Foreground = view.MathBrushFore;
+                }
+                else if (index.Text != view.MathSymbol.ToString() && index.Text != (view.MathSymbol.ToString() + view.MathSymbol.ToString()))
+                {
+                    index.Background = TextBox.Background;
+                    index.Foreground = TextBox.Foreground;
+                }
                 if (index == last)
                     break;
                 index = index.NextInline as Run;
             }
+            if ((TextBox.CaretPosition.Parent as Run) != null && (TextBox.CaretPosition.Parent as Run).Background == view.MathBrushBack)
+                view.InMathContext = true;
+            else
+                view.InMathContext = false;
         }
 
         private void TextBox_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -298,7 +360,6 @@ namespace Subtitle_Printer
         private void CutButton_Click(object sender, RoutedEventArgs e)
         {
             BindableRichTextBox.VerticalTabsModifier(TextBox, Key.X, Key.LeftCtrl);
-            Debug.WriteLine(TextBox.VerticalTabs.Count.ToString());
         }
 
         private void PasteButton_Click(object sender, RoutedEventArgs e)

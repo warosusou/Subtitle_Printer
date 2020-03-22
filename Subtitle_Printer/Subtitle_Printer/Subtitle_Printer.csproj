@@ -86,6 +86,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AutoColorRichTextBox.cs" />
     <Compile Include="BindableRichTextBox.cs" />
     <Compile Include="MainView.cs" />
     <Compile Include="MainWindow.xaml.cs">
