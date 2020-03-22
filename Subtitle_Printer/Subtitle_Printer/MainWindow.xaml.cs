@@ -108,38 +108,25 @@ namespace Subtitle_Printer
 
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-
-            if (e.Text == "") return;
-            if (e.Text.Length > 1)
-            {
-                e.Handled = true;
-                for (int i = 0; i < e.Text.Length; i++)
-                {
-                    var composition = new TextComposition(InputManager.Current, (BindableRichTextBox)sender, e.Text[i].ToString());
-                    var ne = new TextCompositionEventArgs(e.Device, composition);
-                    ne.RoutedEvent = e.RoutedEvent;
-                    ne.Source = e.Source;
-                    TextBox_PreviewTextInput(sender, ne);
-                }
-            }
-            var caretPos = TextBox.CaretPosition;
-            var symbol = view.MathSymbol.ToString();
-            var run = caretPos.Parent as Run;
-            var newRunLeft = new Run();
-            var newRunRight = new Run();
+            var run = TextBox.CaretPosition.Parent as Run;
             if (TextBox.Selection.Text == "\r\n")
             {
-                run = caretPos.GetNextInsertionPosition(LogicalDirection.Backward).Parent as Run;
-                caretPos = run.ElementEnd;
+                run = TextBox.CaretPosition.GetNextInsertionPosition(LogicalDirection.Backward).Parent as Run;
+                TextBox.CaretPosition = run.ElementEnd;
             }
-            if (run == null)
-                return;
-            if (e.Text == symbol || e.Text == view.MathSymbolAlias.ToString())
+        }
+
+        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.T)
             {
+                var caretPos = TextBox.CaretPosition;
+                var symbol = view.MathSymbol.ToString();
+                var run = caretPos.Parent as Run;
+                var newRunLeft = new Run();
+                var newRunRight = new Run();
                 var insert = symbol;
                 e.Handled = true;
-                if (e.Text == view.MathSymbolAlias.ToString())
-                    caretPos.DeleteTextInRun(-1);
                 if (caretPos.GetOffsetToPosition(run.ContentStart) != 0 && caretPos.GetOffsetToPosition(run.ContentEnd) != 0)
                 {
                     var i = run;
@@ -177,111 +164,66 @@ namespace Subtitle_Printer
                 }
                 InputMethod.Current.ImeSentenceMode = ImeSentenceModeValues.Conversation;
             }
-            else
+            /*
+            if (e.Key == Key.Enter)
             {
-                if (run.Text.StartsWith(symbol) && run.Text.EndsWith(symbol) && run.Text.Count(x => x == view.MathSymbol) == 2)
-                {
-                    if (caretPos.GetOffsetToPosition(run.ContentStart) == 0)
-                    {
-                        if (run.PreviousInline == null || Util.GetLineIndex(run.ContentStart) != Util.GetLineIndex(run.PreviousInline.ContentStart))
-                        {
-                            newRunLeft.Background = TextBox.Background;
-                            newRunLeft.Text = e.Text;
-                            e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertBefore(run, newRunLeft);
-                            TextBox.CaretPosition = newRunLeft.ElementEnd;
-                        }
-                        else if (run.PreviousInline != null && (run.PreviousInline as Run).Text.StartsWith(symbol) && (run.PreviousInline as Run).Text.EndsWith(symbol))
-                        {
-                            newRunLeft.Background = TextBox.Background;
-                            newRunLeft.Text = e.Text;
-                            e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertBefore(run, newRunLeft);
-                            TextBox.CaretPosition = newRunLeft.ElementEnd;
-                        }
-                        else
-                        {
-                            TextBox.CaretPosition = run.PreviousInline.ElementEnd;
-                        }
-                    }
-                    else if (caretPos.GetOffsetToPosition(run.ContentEnd) == 0)
-                    {
-                        if (run.NextInline == null || Util.GetLineIndex(run.ContentStart) != Util.GetLineIndex(run.NextInline.ContentStart))
-                        {
-                            newRunLeft.Background = TextBox.Background;
-                            newRunLeft.Text = e.Text;
-                            e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertAfter(run, newRunLeft);
-                            TextBox.CaretPosition = newRunLeft.ElementStart;
-                        }
-                        else if (run.NextInline != null && (run.NextInline as Run).Text.StartsWith(symbol) && (run.NextInline as Run).Text.EndsWith(symbol))
-                        {
-                            newRunLeft.Background = TextBox.Background;
-                            newRunLeft.Text = e.Text;
-                            e.Handled = true;
-                            caretPos.Paragraph.Inlines.InsertAfter(run, newRunLeft);
-                            TextBox.CaretPosition = newRunLeft.ElementEnd;
-                        }
-                        else
-                        {
-                            TextBox.CaretPosition = run.NextInline.ElementStart;
-                        }
-                    }
-                }
-                else if (run.Text.Count(x => x == view.MathSymbol) > 2)
+                var caretPosParent = TextBox.CaretPosition.Parent as Run;
+                if (caretPosParent == null || caretPosParent.Text != view.MathSymbol.ToString()) return;
+                var left = caretPosParent.PreviousInline as Run;
+                var right = caretPosParent.NextInline as Run;
+                if (left == null || right == null) return;
+                if (
+                    (left.Background == view.MathBrushBack && TextBox.CaretPosition.GetOffsetToPosition(caretPosParent.ContentStart) == 0) ||
+                    (right.Background == view.MathBrushBack && TextBox.CaretPosition.GetOffsetToPosition(caretPosParent.ContentEnd) == 0)
+                    )
                 {
                     e.Handled = true;
-                    var i = run;
-                    var forword = new TextRange(run.ContentStart, caretPos);
-                    var behind = new TextRange(caretPos, run.ContentEnd);
-                    if (!forword.Text.EndsWith(symbol) && !behind.Text.StartsWith(symbol)) return;
-                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(forword.Text) { Background = view.MathBrushBack });
-                    i = i.NextInline as Run;
-                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(e.Text));
-                    i = i.NextInline as Run;
-                    caretPos.Paragraph.Inlines.InsertAfter(i, new Run(behind.Text) { Background = view.MathBrushBack });
-                    caretPos.Paragraph.Inlines.Remove(run);
-                    run = i;
-                    TextBox.CaretPosition = run.ContentEnd;
                 }
-            }
-
+            }*/
         }
 
-        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TextBox_TextInput(object sender, TextCompositionEventArgs e)
         {
-            if (view.InMathContext && e.Key == Key.Enter)
+            Debug.WriteLine(1);
+            if (e.Text == view.MathSymbol.ToString())
             {
-                e.Handled = true;
-                return;
-            }
-            var run = TextBox.CaretPosition.Parent as Run;
-            if (run == null) return;
-            if (run.Text.Contains(view.MathSymbol))
-            {
-                if (TextBox.CaretPosition.GetOffsetToPosition(run.ContentStart) == 0)
-                {
-                    if (run.PreviousInline == null)
-                        TextBox.CaretPosition.Paragraph.Inlines.InsertBefore(run, new Run() { Background = TextBox.Background });
-                    var previous = run.PreviousInline;
-                    TextBox.CaretPosition = previous.ElementEnd;
-                }
-                else if (TextBox.CaretPosition.GetOffsetToPosition(run.ContentEnd) == 0)
-                {
-                    if (run.NextInline == null)
-                        TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(run, new Run() { Background = TextBox.Background });
-                    var next = run.NextInline;
-                    TextBox.CaretPosition = next.ElementStart;
-                }
-            }
-            if (InputMethod.Current.ImeState == InputMethodState.On && (e.ImeProcessedKey == Key.Oem3 || (e.ImeProcessedKey == Key.D2 && Keyboard.Modifiers == ModifierKeys.Shift)))
-            {
-                InputMethod.Current.ImeSentenceMode = ImeSentenceModeValues.None;
+                var caretPosParent = TextBox.CaretPosition.Parent as Run;
+                if (caretPosParent == null) return;
+                var split = caretPosParent.Text.Split(view.MathSymbol);
+                caretPosParent.Text = split[0];
+                var mathRun = new Run(view.MathSymbol.ToString()) { Foreground = view.MathBrushFore, Background = view.MathBrushBack };
+                var surplusRun = new Run(split[1]);
+                TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(caretPosParent, mathRun);
+                TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(mathRun, surplusRun);
             }
         }
 
         private void TextBox_KeyUp(object sender, KeyEventArgs e)
         {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.V)
+            {
+                System.Windows.IDataObject clipboardData = System.Windows.Clipboard.GetDataObject();
+                if (clipboardData.GetDataPresent(System.Windows.DataFormats.Text))
+                {
+                    string clipboardText = (string)clipboardData.GetData(System.Windows.DataFormats.Text);
+                    int lineCount = clipboardText.Where(x => x == '\v' || x == '\n').Count();
+                    var currentPos = TextBox.CaretPosition;
+                    for (int i = 0; i < lineCount; i++)
+                    {
+                        var next = TextBox.CaretPosition.GetLineStartPosition(-1).GetNextInsertionPosition(LogicalDirection.Forward);
+                        if (next != TextBox.CaretPosition)
+                        {
+                            TextBox.CaretPosition = next;
+                            ColorCoordinator();
+                        }
+                        else
+                        {
+                            TextBox.CaretPosition = TextBox.CaretPosition.GetLineStartPosition(-1);
+                        }
+                    }
+                    TextBox.CaretPosition = currentPos;
+                }
+            }
             ColorCoordinator();
         }
 
@@ -291,7 +233,12 @@ namespace Subtitle_Printer
             if (lineStart == null) return;
             var lineEnd = TextBox.CaretPosition.GetLineStartPosition(1);
             if (lineEnd == null)
-                lineEnd = (lineStart.Paragraph.Inlines.LastInline as Run).ContentEnd;
+            {
+                if (lineStart.Paragraph.Inlines.LastInline as Run == null)
+                    lineEnd = ((lineStart.Paragraph.Inlines.LastInline as Span).Inlines.LastInline as Run).ContentEnd;
+                else
+                    lineEnd = (lineStart.Paragraph.Inlines.LastInline as Run).ContentEnd;
+            }
             else
                 lineEnd = lineEnd.GetNextInsertionPosition(LogicalDirection.Backward);
             var index = lineStart.Parent as Run;
@@ -301,11 +248,24 @@ namespace Subtitle_Printer
             {
                 if (index == null)
                     break;
-                if (index.Text.StartsWith(view.MathSymbol.ToString()) && index.Text.Length != 1)
+                if (index.Text.Contains(view.MathSymbol.ToString()) && index.Text.Length != 1)
                 {
-                    var surplus = index.Text.Substring(1);
-                    index.Text = view.MathSymbol.ToString();
-                    TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(index, new Run(surplus));
+                    var split = index.Text.Split(view.MathSymbol);
+                    index.Text = split[0];
+                    for (int i = split.Length - 2; i >= 0; i--)
+                    {
+                        var math = new Run(view.MathSymbol.ToString()) { Foreground = view.MathBrushFore, Background = view.MathBrushBack };
+                        var surplus = new Run(split[i + 1]);
+                        TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(index, math);
+                        TextBox.CaretPosition.Paragraph.Inlines.InsertAfter(math, surplus);
+                    }
+                    lineEnd = TextBox.CaretPosition.GetLineStartPosition(1);
+                    if (lineEnd == null)
+                        lineEnd = (lineStart.Paragraph.Inlines.LastInline as Run).ContentEnd;
+                    else
+                        lineEnd = lineEnd.GetNextInsertionPosition(LogicalDirection.Backward);
+                    last = lineEnd.Parent as Run;
+
                 }
                 if (index.Text.StartsWith(view.MathSymbol.ToString()) && index.Text.EndsWith(view.MathSymbol.ToString()) && index.Background != view.MathBrushBack)
                 {
@@ -346,10 +306,6 @@ namespace Subtitle_Printer
                     break;
                 index = index.NextInline as Run;
             }
-            if ((TextBox.CaretPosition.Parent as Run) != null && (TextBox.CaretPosition.Parent as Run).Background == view.MathBrushBack)
-                view.InMathContext = true;
-            else
-                view.InMathContext = false;
         }
 
         private void TextBox_SizeChanged(object sender, SizeChangedEventArgs e)

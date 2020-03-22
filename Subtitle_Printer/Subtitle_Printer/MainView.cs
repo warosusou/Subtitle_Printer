@@ -16,6 +16,5 @@ namespace Subtitle_Printer
         public Brush MathBrushBack { get; } = Brushes.Blue;
         public char MathSymbol { get; } = '@';
         public char MathSymbolAlias { get; } = '＠';
-        internal bool InMathContext { get; set; } = false;
     }
 }

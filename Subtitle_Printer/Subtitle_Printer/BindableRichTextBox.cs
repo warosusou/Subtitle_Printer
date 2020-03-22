@@ -18,7 +18,7 @@ namespace Subtitle_Printer
 
         static BindableRichTextBox()
         {
-            EventManager.RegisterClassHandler(typeof(BindableRichTextBox), KeyDownEvent, new KeyEventHandler(OnKeyDown), false);
+            EventManager.RegisterClassHandler(typeof(BindableRichTextBox), PreviewKeyDownEvent, new KeyEventHandler(OnPreviewKeyDown), false);
             EventManager.RegisterClassHandler(typeof(BindableRichTextBox), MouseUpEvent, new MouseButtonEventHandler(OnMouseUp), false);
         }
 
@@ -54,7 +54,7 @@ namespace Subtitle_Printer
             }
         }
 
-        private static void OnKeyDown(object sender, KeyEventArgs e)
+        private static void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
             var control = sender as BindableRichTextBox;
 
@@ -72,12 +72,17 @@ namespace Subtitle_Printer
                     var startLine = RichTextBoxUtil.GetLineIndex(control.Selection.Start);
                     var endLine = RichTextBoxUtil.GetLineIndex(control.Selection.End);
                     var verticalTabs = control.VerticalTabs.ToList();
-                    for (int i = endLine - 1; i >= startLine; i--)
+                    var changedIndexes = new List<int>();
+                    for (int i = endLine - 2; i >= startLine; i--)
                     {
                         verticalTabs.RemoveAt(i);
+                        changedIndexes.Add(i);
                     }
                     control.VerticalTabs = verticalTabs;
+                    control.LineIndex -= changedIndexes.Count;
                     if (e.Key == Key.Enter) VerticalTabsModifier(control, Key.Enter, RichTextBoxUtil.ConvertKeyModifierToKey());
+                    if (changedIndexes.Count != 0)
+                        control.OnVerticalTabsChanged(new VerticalTabsChangedEventArgs(true, changedIndexes));
                     return;
                 }
                 else
@@ -100,9 +105,7 @@ namespace Subtitle_Printer
                 (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.V) ||
                 (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.X))
                 VerticalTabsModifier(control, e.Key, RichTextBoxUtil.ConvertKeyModifierToKey());
-            /*if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Shift)
-                e.Handled = true;
-        */}
+        }
 
         private static void OnMouseUp(object sender, MouseEventArgs e)
         {
@@ -149,24 +152,31 @@ namespace Subtitle_Printer
             switch (key)
             {
                 case Key.Back:
-                    if (!control.CaretPosition.IsAtLineStartPosition) return;
-                    if (control.LineIndex <= 0) return;
-                    control.LineIndex--;
-                    verticalTabs.RemoveAt(control.LineIndex);
+                    if (control.CaretPosition.IsAtLineStartPosition)
+                    {
+                        if (control.LineIndex <= 0) return;
+                        control.LineIndex--;
+                        verticalTabs.RemoveAt(control.LineIndex);
 
-                    removed = true;
-                    changedIndexes.Add(control.LineIndex);
-                    control.LineCount--;
+                        removed = true;
+                        changedIndexes.Add(control.LineIndex);
+                        control.LineCount--;
+                    }
+                    else
+                        return;
                     break;
                 case Key.Delete:
                     if (control.CaretPosition.GetOffsetToPosition(control.CaretPosition.DocumentEnd) <= 2) return;
-                    if (!control.CaretPosition.GetNextInsertionPosition(LogicalDirection.Forward).IsAtLineStartPosition) return;
-                    if (control.LineIndex == verticalTabs.Count() - 1) return;
-                    verticalTabs.RemoveAt(control.LineIndex);
-
-                    removed = true;
-                    changedIndexes.Add(control.LineIndex);
-                    control.LineCount--;
+                    if (control.CaretPosition.GetNextInsertionPosition(LogicalDirection.Forward).IsAtLineStartPosition)
+                    {
+                        if (control.LineIndex == verticalTabs.Count() - 1) return;
+                        verticalTabs.RemoveAt(control.LineIndex);
+                        removed = true;
+                        changedIndexes.Add(control.LineIndex);
+                        control.LineCount--;
+                    }
+                    else
+                        return;
                     break;
                 case Key.Return:
                     if (modifier != Key.LeftShift && modifier != Key.RightShift)
@@ -251,17 +261,12 @@ namespace Subtitle_Printer
         public static int GetLineIndex(TextPointer position)
         {
             if (position == null) return -1;
-            int lineIndex = 0;
-
             var rangeFromStartToPosition = new TextRange(position.DocumentStart, position);
-            bool linefeed = false;
-            for (int i = 0; i < rangeFromStartToPosition.Text.Length; i++)
-            {
-                if (linefeed && rangeFromStartToPosition.Text[i] == '\n') lineIndex++;
-                else if (rangeFromStartToPosition.Text[i] == '\r') linefeed = true;
-                else linefeed = false;
-            }
-            return lineIndex;
+            var split = rangeFromStartToPosition.Text.Split('\n');
+            int ignore = 1;
+            if (split.Last() == "\r\n")
+                ignore++;
+            return split.Length - ignore;
         }
 
         public static int GetLineIndex(BindableRichTextBox control, TextPointer pointer)
