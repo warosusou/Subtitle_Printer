@@ -1,11 +1,18 @@
 ﻿<SyntaxDefinition name="ProjectZTex" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
     <Color name="Tex" foreground="Blue" />
+    <Color name="Comment" foreground="Green" />
 
     <!-- This is the main ruleset. -->
     <RuleSet>
         <Span color="Tex">
             <Begin>\$</Begin>
             <End>\$</End>
+        </Span>
+        <Span color="Comment">
+            <Begin>%</Begin>
+        </Span>
+        <Span color="Comment">
+            <Begin>％</Begin>
         </Span>
     </RuleSet>
 </SyntaxDefinition>

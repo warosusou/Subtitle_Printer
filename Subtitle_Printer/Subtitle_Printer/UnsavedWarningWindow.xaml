@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Subtitle_Printer"
         mc:Ignorable="d"
-        Title="UnsavedWarningWindow" Height="349.967" Width="620.774">
-    <Grid Margin="0,0,-5.714,2.714">
-        <Label Content="hogehoge" Name="label" Margin="0,60,9.571,0" VerticalAlignment="Top" HorizontalAlignment="Center" Width="611" HorizontalContentAlignment="Center"/>
-        <Button Content="はい" Name="OkButton" Click="OkButton_Click" HorizontalAlignment="Left" Margin="60,226,0,0" VerticalAlignment="Top" Width="125" Height="40"/>
-        <Button Content="いいえ" Name="NoButton" Click="NoButton_Click" HorizontalAlignment="Left" Margin="215,226,0,0" VerticalAlignment="Top" Width="125" Height="40"/>
-        <Button Content="キャンセル" Name="CancelButton" Click="CancelButton_Click"  HorizontalAlignment="Left" Margin="432,226,0,0" VerticalAlignment="Top" Width="125" Height="40"/>
+        Title="" Height="191.394" Width="495.166">
+    <Grid Margin="0,0,-5.286,-0.714">
+        <Label Content="hogehoge" Name="label" Margin="0,36,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" Width="495" HorizontalContentAlignment="Center"/>
+        <Button Content="はい" Name="OkButton" Click="OkButton_Click" HorizontalAlignment="Left" Margin="18,107,0,0" VerticalAlignment="Top" Width="125" Height="40"/>
+        <Button Content="いいえ" Name="NoButton" Click="NoButton_Click" HorizontalAlignment="Left" Margin="173,107,0,0" VerticalAlignment="Top" Width="125" Height="40"/>
+        <Button Content="キャンセル" Name="CancelButton" Click="CancelButton_Click"  HorizontalAlignment="Left" Margin="348,107,0,0" VerticalAlignment="Top" Width="125" Height="40"/>
 
     </Grid>
 </Window>
