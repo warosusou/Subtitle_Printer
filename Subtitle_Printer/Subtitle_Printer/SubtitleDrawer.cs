@@ -66,7 +66,7 @@ namespace Subtitle_Printer
                 if (temp == "") return null;
                 PointF pt = new PointF(0, pictureBox1.Height / 2);
                 var strfmt = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                switch (Alignment)
+                /*switch (Alignment)
                 {
                     case Alignment.Left:
                         strfmt.Alignment = StringAlignment.Near;
@@ -79,7 +79,7 @@ namespace Subtitle_Printer
                         strfmt.Alignment = StringAlignment.Far;
                         pt = new PointF(pictureBox1.Width, pictureBox1.Height / 2);
                         break;
-                }
+                }*/
                 SizeF size = new SizeF(pictureBox1.Width, pictureBox1.Height);
                 Bitmap canvas;
                 bool gotsize = false;
@@ -101,6 +101,7 @@ namespace Subtitle_Printer
                             //画像サイズを取得
                             var s = g.MeasureString(text, fnt);
                             if (s.Width == 0) break;
+                            size = s;
                             gotsize = true;
                             canvas.Dispose();
                         }
@@ -126,6 +127,7 @@ namespace Subtitle_Printer
             internal static Bitmap LineBitmap(string text)
             {
                 Bitmap result = null;
+                var sections = new List<Section>();
                 text = text.Trim();
                 if (text.EndsWith(":") || text.EndsWith("：")) text = "";
                 if (text.Contains("%")) text = text.Split('%')[0];
@@ -133,9 +135,6 @@ namespace Subtitle_Printer
                 if (text == "") { return result; }
                 if (text.Contains(beginTag) && text.Length > text.IndexOf(beginTag) + beginTag.Length && text.Substring(text.IndexOf(beginTag) + beginTag.Length).Contains(endTag))
                 {
-                    var sections = new List<Section>();
-                    int result_width = 0;
-                    int result_height = ImageDrawer.pictureBox1.Height;
                     while (text.Length != 0)
                     {
                         string section = "";
@@ -165,28 +164,43 @@ namespace Subtitle_Printer
                         if (section == "") { continue; }
                         sections.Add(new Section(section));
                     }
-                    sections.RemoveAll(x => x.Image == null || x.Image.Width == 0);
-                    foreach (var s in sections)
-                    {
-                        if (s.Image.Height > result_height && ImageDrawer.AutoShrink) { s.ShrinkImage(); }
-                        result_width += s.Image.Width;
-                    }
-                    if (result_width == 0) { return result; }
-                    result = new Bitmap(result_width, result_height);
-                    using (Graphics g = Graphics.FromImage(result))
-                    {
-                        int xpos = 0;
-                        foreach (var s in sections)
-                        {
-                            var ypos = (result.Height - s.Image.Height) / 2;
-                            g.DrawImage(s.Image, xpos, ypos);
-                            xpos += s.Image.Width;
-                        }
-                    }
                 }
                 else
                 {
-                    result = ImageDrawer.Graphicer(text);
+                    sections.Add(new Section(text));
+                }
+                sections.RemoveAll(x => x.Image == null || x.Image.Width == 0);
+                foreach (var s in sections)
+                {
+                    if (s.Image.Height > pictureBox1.Height && ImageDrawer.AutoShrink) { s.ShrinkImage(); }
+                }
+                if (sections.Sum(x => x.Image.Width) == 0) { return result; }
+                result = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                using (Graphics g = Graphics.FromImage(result))
+                {
+                    int xpos = 0;
+                    switch (Alignment)
+                    {
+                        case Alignment.Left:
+                            xpos = 0;
+                            break;
+                        case Alignment.Center:
+                            xpos = (pictureBox1.Width - sections.Sum(x => x.Image.Width)) / 2;
+                            break;
+                        case Alignment.Right:
+                            xpos = pictureBox1.Width;
+                            sections.Reverse();
+                            break;
+                    }
+                    foreach (var s in sections)
+                    {
+                        if (Alignment == Alignment.Right)
+                            xpos -= s.Image.Width;
+                        var ypos = (result.Height - s.Image.Height) / 2;
+                        g.DrawImage(s.Image, xpos, ypos);
+                        if (Alignment != Alignment.Right)
+                            xpos += s.Image.Width;
+                    }
                 }
                 return result;
             }
