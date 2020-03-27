@@ -26,7 +26,12 @@ namespace Subtitle_Printer
                 {
                     List<string> line = e.InsertedText.Text.Replace("\n", "").Split('\r').ToList();
                     for (int i = 1; i < line.Count; i++)
-                        OnLineChanged(new LineChangedEventArgs(false, i + 1));
+                    {
+                        if (line[i].Contains("\v"))
+                            OnLineChanged(new LineChangedEventArgs(false, i + 1, true));
+                        else
+                            OnLineChanged(new LineChangedEventArgs(false, i + 1));
+                    }
                 }
                 else
                 {
@@ -60,11 +65,19 @@ namespace Subtitle_Printer
     {
         public bool Deleted { get; }
         public int LineNumber { get; }
+        public bool ContainVertical { get; } = false;
 
         public LineChangedEventArgs(bool deleted, int lineNumber)
         {
             Deleted = deleted;
             LineNumber = lineNumber;
+        }
+
+        public LineChangedEventArgs(bool deleted, int lineNumber, bool containVertical)
+        {
+            Deleted = deleted;
+            LineNumber = lineNumber;
+            ContainVertical = containVertical;
         }
     }
 }

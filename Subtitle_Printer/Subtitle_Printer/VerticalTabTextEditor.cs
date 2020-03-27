@@ -33,7 +33,7 @@ namespace Subtitle_Printer
             }
             else
             {
-                if (shiftPressed)
+                if (shiftPressed || e.ContainVertical)
                     verticalTabs.Insert(e.LineNumber - 2, true);
                 else
                     verticalTabs.Insert(e.LineNumber - 2, false);
