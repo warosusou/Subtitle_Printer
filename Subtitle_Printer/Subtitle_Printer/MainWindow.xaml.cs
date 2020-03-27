@@ -164,16 +164,14 @@ namespace Subtitle_Printer
                     new FileInfo(f.FullName).Delete();
                 }
             }
-            var lines = TextBox.Text.Split(Environment.NewLine.ToCharArray());
-            var lineIndexes = LineNumberCalc.Calc(1, lines.Count(), TextBox.VerticalTabs);
+            var lines = TextBox.Text.Replace("\n","").Split('\r');
+            var lineIndexes = LineNumberCalc.Calc(1, lines.Count(), TextBox.VerticalTabs).ToArray();
             for (int currentline = 0; currentline < lines.Count(); currentline++)
             {
-                string text = "";
-                Bitmap result = null;
                 if (lines[currentline].Length != 0)
                 {
-                    result = SubtitleDrawer.ImageDrawer.LineBitmap(lines[currentline]);
-                    text = lines[currentline].Trim();
+                    Bitmap result = SubtitleDrawer.ImageDrawer.LineBitmap(lines[currentline]);
+                    string text = lines[currentline].Trim();
                     if (text.EndsWith(":") || text.EndsWith("：")) continue;
                     if (text.Contains("%")) text = text.Split('%')[0];
                     else if (text.Contains("％")) text = text.Split('％')[0];
