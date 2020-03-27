@@ -15,7 +15,7 @@ namespace Subtitle_Printer
             int lineNumber = start;
             for (int lineIndex = start - 1; lineIndex < end; lineIndex++)
             {
-                if (lineIndex == 0)
+                if (lineIndex == start - 1)
                 {
                     var verticalTabsBlock = VerticalTabs.Take(lineNumber).ToList();
                     verticalTabsBlock.RemoveAt(verticalTabsBlock.Count() - 1);

@@ -28,7 +28,7 @@
             <local:VerticalTabLineNumberMargin x:Name="TextBoxLineNumber" Width="51" Margin="0,0,0,-1.429" HorizontalAlignment="Left"/>
         </Grid>
         <Border x:Name="ImageGrid" Margin="0,0,0.857,-0.429" BorderBrush="Black" BorderThickness="1" Height="99" VerticalAlignment="Bottom" >
-            <Image Name="ImageFrame" Height="99" VerticalAlignment="Top" Margin="-1.143,-1.143,1.571,-1.286"/>
+            <Image Name="ImageFrame" Height="99" VerticalAlignment="Top" Margin="-1.143,-1.143,1.571,-1.286" Stretch="None" MinHeight="99" HorizontalAlignment="Left"/>
         </Border>
 
     </Grid>

@@ -86,7 +86,7 @@ namespace Subtitle_Printer
                 while (true)
                 {
                     //描画先とするImageオブジェクトを作成する
-                    canvas = new Bitmap((int)size.Width, pictureBox1.Height);
+                    canvas = new Bitmap((int)size.Width, (int)size.Height);
                     //ImageオブジェクトのGraphicsオブジェクトを作成する
                     using (var g = Graphics.FromImage(canvas))
                     {
@@ -99,8 +99,8 @@ namespace Subtitle_Printer
                             g.DrawString(text, fnt, Brushes.Black, pt, strfmt);
                             if (gotsize) break;
                             //画像サイズを取得
-                            size = g.MeasureString(text, fnt);
-                            if (size.Width == 0) break;
+                            var s = g.MeasureString(text, fnt);
+                            if (s.Width == 0) break;
                             gotsize = true;
                             canvas.Dispose();
                         }

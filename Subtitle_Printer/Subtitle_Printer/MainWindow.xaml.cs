@@ -37,14 +37,14 @@ namespace Subtitle_Printer
 
         public string FileName { get { return filename; } private set { filename = value; this.Title = FileName; } }
         private string filename;
-        private Timer linePrintTimer = new Timer { Interval = 200};
+        private Timer linePrintTimer = new Timer { Interval = 200 };
 
         public MainWindow()
         {
             InitializeComponent();
             TextBoxLineNumber.TextView = TextBox.TextArea.TextView;
             TextBoxLineNumber.VerticalTabs = TextBox.VerticalTabs;
-            FileName = "NoTitle.txt";            
+            FileName = "NoTitle.txt";
             using (var reader = new XmlTextReader("ProjectZTexDef.xshd"))
             {
                 TextBox.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
@@ -55,6 +55,10 @@ namespace Subtitle_Printer
         {
             this.MinWidth = this.ActualWidth;
             this.MinHeight = 230;
+            ImageFrame.MinWidth = ImageGrid.ActualWidth - 10;
+            ImageFrame.MinHeight = ImageGrid.ActualHeight;
+            ImageFrame.MaxWidth = ImageFrame.MinWidth;
+            ImageFrame.MaxHeight = ImageFrame.MinHeight;
             LeftAlignmentRadioButton.IsChecked = true;
             SubtitleDrawer.ImageDrawer.PrintingFont = new Font("メイリオ", 20);
             SubtitleDrawer.ImageDrawer.pictureBox1 = new System.Drawing.Size((int)ImageGrid.ActualWidth, (int)ImageGrid.ActualHeight);
@@ -82,7 +86,7 @@ namespace Subtitle_Printer
                 ImageFrame.Source = null;
             }
         }
-        
+
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
             SaveSubtitles();
@@ -96,7 +100,7 @@ namespace Subtitle_Printer
                 TextBox.Text = TextBox.Text.Insert(TextBox.CaretOffset, "$$");
                 TextBox.CaretOffset = caret + 1;
             }
-            else if(e.Key ==Key.S && Keyboard.Modifiers == ModifierKeys.Control)
+            else if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 SaveTextFile();
             }
@@ -232,10 +236,12 @@ namespace Subtitle_Printer
 
         private void ImageResolutionButton_Click(object sender, RoutedEventArgs e)
         {
-            var r = new ResolutionWindow(new System.Windows.Size(ImageFrame.MaxWidth,ImageFrame.MaxHeight));
+            var r = new ResolutionWindow(new System.Windows.Size(ImageFrame.MaxWidth, ImageFrame.MaxHeight));
             r.ShowDialog();
             if (r.DialogResult == System.Windows.Forms.DialogResult.OK)
             {
+                ImageFrame.MinWidth = r.size.Width;
+                ImageFrame.MinHeight = r.size.Height;
                 ImageFrame.MaxWidth = r.size.Width;
                 ImageFrame.MaxHeight = r.size.Height;
             }
