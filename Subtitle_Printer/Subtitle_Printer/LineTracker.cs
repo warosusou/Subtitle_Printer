@@ -15,26 +15,30 @@ namespace Subtitle_Printer
 
         public void BeforeRemoveLine(DocumentLine line)
         {
-            if (this.LineChanged != null)
-                OnLineChanged(new LineChangedEventArgs(true, line.LineNumber));
+            OnLineChanged(new LineChangedEventArgs(true, line.LineNumber));
         }
 
         public void ChangeComplete(DocumentChangeEventArgs e)
         {
-            if (!noticed && (e.InsertedText.Text == Environment.NewLine || e.RemovedText.Text == Environment.NewLine))
+            if (!noticed && (e.InsertedText.Text.Contains(Environment.NewLine) || e.RemovedText.Text.Contains(Environment.NewLine)))
             {
                 if (e.InsertionLength != 0)
-                    OnLineChanged(new LineChangedEventArgs(false, 2));
+                {
+                    List<string> line = e.InsertedText.Text.Replace("\n", "").Split('\r').ToList();
+                    for (int i = 1; i < line.Count; i++)
+                        OnLineChanged(new LineChangedEventArgs(false, i + 1));
+                }
                 else
+                {
                     OnLineChanged(new LineChangedEventArgs(true, 2));
+                }
             }
             noticed = false;
         }
 
         public void LineInserted(DocumentLine insertionPos, DocumentLine newLine)
         {
-            if (this.LineChanged != null)
-                OnLineChanged(new LineChangedEventArgs(false, newLine.LineNumber));
+            OnLineChanged(new LineChangedEventArgs(false, newLine.LineNumber));
         }
 
         public void RebuildDocument()

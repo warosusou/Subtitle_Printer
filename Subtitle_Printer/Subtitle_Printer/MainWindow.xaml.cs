@@ -106,6 +106,15 @@ namespace Subtitle_Printer
             }
         }
 
+        private void TextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Up || e.Key == Key.Down)
+            {
+                linePrintTimer.Enabled = false;
+                linePrintTimer.Enabled = true;
+            }
+        }
+
         private void TextBox_TextChanged(object sender, EventArgs e)
         {
             linePrintTimer.Enabled = false;
@@ -164,7 +173,7 @@ namespace Subtitle_Printer
                     new FileInfo(f.FullName).Delete();
                 }
             }
-            var lines = TextBox.Text.Replace("\n","").Split('\r');
+            var lines = TextBox.Text.Replace("\n", "").Split('\r');
             var lineIndexes = LineNumberCalc.Calc(1, lines.Count(), TextBox.VerticalTabs).ToArray();
             for (int currentline = 0; currentline < lines.Count(); currentline++)
             {
