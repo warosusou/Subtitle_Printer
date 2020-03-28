@@ -22,7 +22,7 @@ namespace Subtitle_Printer
         {
             if (!noticed && (e.InsertedText.Text.Contains(Environment.NewLine) || e.RemovedText.Text.Contains(Environment.NewLine)))
             {
-                if (e.InsertionLength != 0)
+                if (e.InsertionLength != 0 &&  e.RemovedText.TextLength == 0)
                 {
                     List<string> line = e.InsertedText.Text.Replace("\n", "").Split('\r').ToList();
                     for (int i = 1; i < line.Count; i++)
@@ -33,7 +33,7 @@ namespace Subtitle_Printer
                             OnLineChanged(new LineChangedEventArgs(false, i + 1));
                     }
                 }
-                else
+                else if(e.InsertionLength ==0)
                 {
                     OnLineChanged(new LineChangedEventArgs(true, 2));
                 }

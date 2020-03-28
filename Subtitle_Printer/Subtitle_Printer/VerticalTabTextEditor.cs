@@ -51,7 +51,7 @@ namespace Subtitle_Printer
         public string SaveVerticalTabText(string fileName)
         {
             StringBuilder sb = new StringBuilder();
-            var lines = this.Text.Split(Environment.NewLine.ToCharArray());
+            var lines = this.Text.Replace("\n", "").Split(Environment.NewLine.ToCharArray());
             for (int i = 0; i < lines.Count(); i++)
             {
                 if (this.VerticalTabs.ElementAt(i))
@@ -92,7 +92,7 @@ namespace Subtitle_Printer
                     StreamReader sr = new StreamReader(fileStream, true);
                     loadedText = sr.ReadToEnd();
                 }
-                var lines = loadedText.Split(Environment.NewLine.ToCharArray()).Reverse();
+                var lines = loadedText.Replace("\n", "").Split(Environment.NewLine.ToCharArray()).Reverse();
                 this.Text = "";
                 foreach (var line in lines)
                 {

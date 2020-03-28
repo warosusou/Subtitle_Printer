@@ -24,6 +24,7 @@ using System.Windows.Shapes;
 using System.Xml;
 using static Subtitle_Printer.SubtitleDrawer;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using Path = System.IO.Path;
 
 namespace Subtitle_Printer
 {
@@ -39,6 +40,7 @@ namespace Subtitle_Printer
         private string filename;
         private Config config;
         private const string configPath = "config.json";
+        private const string noTitle = "NoTitle.txt";
         private Timer linePrintTimer = new Timer { Interval = 50 };
 
         public MainWindow()
@@ -68,7 +70,7 @@ namespace Subtitle_Printer
 
             TextBoxLineNumber.TextView = TextBox.TextArea.TextView;
             TextBoxLineNumber.VerticalTabs = TextBox.VerticalTabs;
-            FileName = "NoTitle.txt";
+            FileName = noTitle;
             using (var reader = new XmlTextReader("ProjectZTexDef.xshd"))
             {
                 TextBox.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
@@ -185,7 +187,7 @@ namespace Subtitle_Printer
 
         private bool SaveTextFile()
         {
-            var result = TextBox.SaveVerticalTabText(FileName);
+            var result =Path.GetFullPath(TextBox.SaveVerticalTabText(FileName));
             if (result != "")
             {
                 FileName = result;
@@ -200,13 +202,14 @@ namespace Subtitle_Printer
 
         private void LoadTextFile()
         {
-            FileName = TextBox.LoadVerticalTabText();
+            FileName = Path.GetFullPath(TextBox.LoadVerticalTabText());
             SetStatusBarLabelContent(String.Format("{0}を読み込みました", FileName));
         }
 
         private void SaveSubtitles()
         {
-            DirectoryInfo di = new DirectoryInfo(Environment.CurrentDirectory);
+            if (this.FileName == noTitle && !SaveTextFile()) return;
+            var di = Directory.CreateDirectory(System.IO.Path.Combine(Path.GetDirectoryName(this.FileName), "Subtitles"));
             List<string> files = new List<string>();
             Regex r = new Regex(@"Line\d*\.bmp");
             foreach (var f in di.GetFiles("*.bmp"))
@@ -228,7 +231,7 @@ namespace Subtitle_Printer
                     if (text.Contains("%")) text = text.Split('%')[0];
                     else if (text.Contains("％")) text = text.Split('％')[0];
                     if (text == "") continue;
-                    if (result != null) result.Save(String.Format("Line{0}.bmp", lineIndexes.ElementAt(currentline)));
+                    if (result != null) result.Save(Path.Combine(di.FullName,String.Format("Line{0}.bmp", lineIndexes.ElementAt(currentline))));
                 }
             }
             SetStatusBarLabelContent(String.Format("字幕を保存しました"));
