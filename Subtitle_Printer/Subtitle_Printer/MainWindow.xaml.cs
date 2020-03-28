@@ -37,11 +37,35 @@ namespace Subtitle_Printer
 
         public string FileName { get { return filename; } private set { filename = value; this.Title = FileName; } }
         private string filename;
+        private Config config;
+        private const string configPath = "config.json";
         private Timer linePrintTimer = new Timer { Interval = 200 };
 
         public MainWindow()
         {
             InitializeComponent();
+            if (File.Exists(configPath))
+            {
+                config = Config.LoadConfig(configPath);
+                config.ConfigAutoSave = true;
+                config.ConfigSavePath = configPath;
+            }
+            else
+            {
+                config = new Config()
+                {
+                    EditorFont = TextBox.FontFamily,
+                    EditorFontSize = TextBox.FontSize,
+                    PrintingFont = new Font("メイリオ", 20),
+                    EQSize = 20,
+                    AutoShrink = true,
+                    Alignment = Alignment.Left,
+                    ImageResolution = new SizeF(),
+                    ConfigAutoSave = true,
+                    ConfigSavePath = configPath
+                };
+            }
+
             TextBoxLineNumber.TextView = TextBox.TextArea.TextView;
             TextBoxLineNumber.VerticalTabs = TextBox.VerticalTabs;
             FileName = "NoTitle.txt";
@@ -55,15 +79,21 @@ namespace Subtitle_Printer
         {
             this.MinWidth = this.ActualWidth;
             this.MinHeight = 230;
-            ImageFrame.MinWidth = ImageGrid.ActualWidth - 10;
-            ImageFrame.MinHeight = ImageGrid.ActualHeight;
-            ImageFrame.MaxWidth = ImageFrame.MinWidth;
-            ImageFrame.MaxHeight = ImageFrame.MinHeight;
-            LeftAlignmentRadioButton.IsChecked = true;
-            SubtitleDrawer.ImageDrawer.PrintingFont = new Font("メイリオ", 20);
-            SubtitleDrawer.ImageDrawer.pictureBox1 = new System.Drawing.Size((int)ImageGrid.ActualWidth, (int)ImageGrid.ActualHeight);
-            SubtitleDrawer.ImageDrawer.EQSize = SubtitleDrawer.ImageDrawer.PrintingFont.Size;
-            SubtitleDrawer.ImageDrawer.AutoShrink = true;
+            if (config.ImageResolution == new SizeF())
+            {
+                config.ImageResolution = new SizeF((float)ImageGrid.ActualWidth, (float)ImageGrid.ActualHeight);
+                Config.SaveConfig(configPath, config);
+            }
+
+            TextBox.FontFamily = config.EditorFont;
+            TextBox.FontSize = config.EditorFontSize;
+            ImageDrawer.PrintingFont = config.PrintingFont;
+            ImageDrawer.EQSize = config.EQSize;
+            ImageDrawer.AutoShrink = config.AutoShrink;
+            ImageDrawer.Alignment = config.Alignment;
+            ImageDrawer.pictureBox1 = new System.Drawing.Size((int)config.ImageResolution.Width, (int)config.ImageResolution.Height);
+            SetImageFrameSize(config.ImageResolution.Width, config.ImageResolution.Height);
+            SetAlignmentRadioButton(config.Alignment);
 
             linePrintTimer.Tick += (s, et) =>
             {
@@ -134,11 +164,12 @@ namespace Subtitle_Printer
                             e.Cancel = true;
                         break;
                     case System.Windows.Forms.DialogResult.No:
-                        return;
+                        break;
                     default:
                         e.Cancel = true;
                         break;
                 }
+                Config.SaveConfig(configPath, config);
             }
         }
 
@@ -198,6 +229,8 @@ namespace Subtitle_Printer
             {
                 TextBox.FontFamily = new System.Windows.Media.FontFamily(fd.Font.Name);
                 TextBox.FontSize = fd.Font.Size;
+                config.EditorFont = TextBox.FontFamily;
+                config.EditorFontSize = TextBox.FontSize;
             }
         }
 
@@ -220,6 +253,8 @@ namespace Subtitle_Printer
             {
                 ImageDrawer.EQSize = f.EQSize;
                 ImageDrawer.AutoShrink = f.AutoShrink;
+                config.EQSize = f.EQSize;
+                config.AutoShrink = f.AutoShrink;
                 ShowSubtitle();
             }
         }
@@ -228,15 +263,15 @@ namespace Subtitle_Printer
         {
             if (LeftAlignmentRadioButton.IsChecked.Value)
             {
-                SubtitleDrawer.ImageDrawer.Alignment = Alignment.Left;
+                ImageDrawer.Alignment = Alignment.Left;
             }
             else if (CenterAlignmentRadioButton.IsChecked.Value)
             {
-                SubtitleDrawer.ImageDrawer.Alignment = Alignment.Center;
+                ImageDrawer.Alignment = Alignment.Center;
             }
             else if (RightAlignmentRadioButton.IsChecked.Value)
             {
-                SubtitleDrawer.ImageDrawer.Alignment = Alignment.Right;
+                ImageDrawer.Alignment = Alignment.Right;
             }
             ShowSubtitle();
         }
@@ -247,10 +282,32 @@ namespace Subtitle_Printer
             r.ShowDialog();
             if (r.DialogResult == System.Windows.Forms.DialogResult.OK)
             {
-                ImageFrame.MinWidth = r.size.Width;
-                ImageFrame.MinHeight = r.size.Height;
-                ImageFrame.MaxWidth = r.size.Width;
-                ImageFrame.MaxHeight = r.size.Height;
+                SetImageFrameSize(r.size.Width, r.size.Height);
+                config.ImageResolution = new SizeF((float)r.size.Width, (float)r.size.Height);
+            }
+        }
+
+        private void SetImageFrameSize(double width, double height)
+        {
+            ImageFrame.MinWidth = width;
+            ImageFrame.MinHeight = height;
+            ImageFrame.MaxWidth = width;
+            ImageFrame.MaxHeight = height;
+        }
+
+        private void SetAlignmentRadioButton(Alignment alignment)
+        {
+            switch (alignment)
+            {
+                case Alignment.Left:
+                    LeftAlignmentRadioButton.IsChecked = true;
+                    break;
+                case Alignment.Center:
+                    CenterAlignmentRadioButton.IsChecked = true;
+                    break;
+                case Alignment.Right:
+                    RightAlignmentRadioButton.IsChecked = true;
+                    break;
             }
         }
 
