@@ -92,7 +92,8 @@ namespace Subtitle_Printer
                     StreamReader sr = new StreamReader(fileStream, true);
                     loadedText = sr.ReadToEnd();
                 }
-                var lines = loadedText.Split(Environment.NewLine.ToCharArray());
+                var lines = loadedText.Split(Environment.NewLine.ToCharArray()).Reverse();
+                this.Text = "";
                 foreach (var line in lines)
                 {
                     if (line.Contains('\v'))
@@ -104,8 +105,9 @@ namespace Subtitle_Printer
                     {
                         this.verticalTabs.Insert(0, false);
                     }
-                    this.Text.Insert(0, String.Format("{0}{1}", line, Environment.NewLine));
+                    this.Text = this.Text.Insert(0, String.Format("{0}{1}", line, Environment.NewLine));
                 }
+                this.UpdateLayout();
                 lineTracker.LineChanged += LineTracker_LineChanged;
                 return openFileDialog.FileName;
             }

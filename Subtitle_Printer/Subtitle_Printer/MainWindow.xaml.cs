@@ -94,6 +94,7 @@ namespace Subtitle_Printer
             ImageDrawer.ImageFrame = new System.Drawing.Size((int)config.ImageResolution.Width, (int)config.ImageResolution.Height);
             SetImageFrameSize(config.ImageResolution.Width, config.ImageResolution.Height);
             SetAlignmentRadioButton(config.Alignment);
+            statusBarLabel.Content = "";
 
             linePrintTimer.Tick += (s, et) =>
             {
@@ -135,6 +136,7 @@ namespace Subtitle_Printer
             else if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 SaveTextFile();
+                e.Handled = true;
             }
         }
 
@@ -148,6 +150,12 @@ namespace Subtitle_Printer
         }
 
         private void TextBox_TextChanged(object sender, EventArgs e)
+        {
+            linePrintTimer.Enabled = false;
+            linePrintTimer.Enabled = true;
+        }
+        
+        private void TextBox_GotMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
         {
             linePrintTimer.Enabled = false;
             linePrintTimer.Enabled = true;
@@ -181,6 +189,7 @@ namespace Subtitle_Printer
             if (result != "")
             {
                 FileName = result;
+                SetStatusBarLabelContent(String.Format("{0}を保存しました", result));
                 return true;
             }
             else
@@ -192,6 +201,7 @@ namespace Subtitle_Printer
         private void LoadTextFile()
         {
             FileName = TextBox.LoadVerticalTabText();
+            SetStatusBarLabelContent(String.Format("{0}を読み込みました", FileName));
         }
 
         private void SaveSubtitles()
@@ -221,6 +231,7 @@ namespace Subtitle_Printer
                     if (result != null) result.Save(String.Format("Line{0}.bmp", lineIndexes.ElementAt(currentline)));
                 }
             }
+            SetStatusBarLabelContent(String.Format("字幕を保存しました"));
         }
 
         private void EditorFontButton_Click(object sender, RoutedEventArgs e)
@@ -293,27 +304,19 @@ namespace Subtitle_Printer
 
         private void SetImageFrameSize(double width, double height)
         {
-            var imageFrame = new System.Windows.Controls.Image() { };
             ImageFieldGrid.MinHeight = height;
             ImageFieldGrid.MaxHeight = height;
             ImageGrid.MinWidth = width;
             ImageGrid.MinHeight = height;
             ImageGrid.MaxWidth = width;
             ImageGrid.MaxHeight = height;
-            /*
-            imageFrame.MinWidth = width;
-            imageFrame.MinHeight = height;
-            imageFrame.MaxWidth = width;
-            imageFrame.MaxHeight = height;
-            ImageFrame = imageFrame;
-            */
             ImageFrame.MinWidth = width;
             ImageFrame.MinHeight = height;
             ImageFrame.MaxWidth = width;
             ImageFrame.MaxHeight = height;
             
             var thickness = MainGrid.Margin;
-            thickness.Bottom = ImageFieldGrid.MaxHeight;
+            thickness.Bottom = ImageFieldGrid.MaxHeight + statusBar.ActualHeight;
             MainGrid.Margin = thickness;
         }
 
@@ -331,6 +334,13 @@ namespace Subtitle_Printer
                     RightAlignmentRadioButton.IsChecked = true;
                     break;
             }
+        }
+
+        private void SetStatusBarLabelContent(string content)
+        {
+            statusBarLabel.Content = content;
+            var t = new Timer { Interval = 5000, Enabled = true };
+            t.Tick += (s, e) => { t.Enabled = false; statusBarLabel.Content = ""; };
         }
 
         private void LoadTextFileButton_Click(object sender, RoutedEventArgs e)
