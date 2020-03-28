@@ -39,7 +39,7 @@ namespace Subtitle_Printer
         private string filename;
         private Config config;
         private const string configPath = "config.json";
-        private Timer linePrintTimer = new Timer { Interval = 200 };
+        private Timer linePrintTimer = new Timer { Interval = 50 };
 
         public MainWindow()
         {
@@ -57,7 +57,7 @@ namespace Subtitle_Printer
                     EditorFont = TextBox.FontFamily,
                     EditorFontSize = TextBox.FontSize,
                     PrintingFont = new Font("メイリオ", 20),
-                    EQSize = 20,
+                    EQSize = 30,
                     AutoShrink = true,
                     Alignment = Alignment.Left,
                     ImageResolution = new SizeF(),
@@ -91,7 +91,7 @@ namespace Subtitle_Printer
             ImageDrawer.EQSize = config.EQSize;
             ImageDrawer.AutoShrink = config.AutoShrink;
             ImageDrawer.Alignment = config.Alignment;
-            ImageDrawer.pictureBox1 = new System.Drawing.Size((int)config.ImageResolution.Width, (int)config.ImageResolution.Height);
+            ImageDrawer.ImageFrame = new System.Drawing.Size((int)config.ImageResolution.Width, (int)config.ImageResolution.Height);
             SetImageFrameSize(config.ImageResolution.Width, config.ImageResolution.Height);
             SetAlignmentRadioButton(config.Alignment);
 
@@ -107,8 +107,10 @@ namespace Subtitle_Printer
             var bmp = SubtitleDrawer.ImageDrawer.LineBitmap(TextBox.Document.GetText(TextBox.Document.GetLineByOffset(TextBox.CaretOffset)));
             if (bmp != null)
             {
+                ImageFrame.Source = null;
                 IntPtr hbitmap = bmp.GetHbitmap();
-                ImageFrame.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(hbitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                var s = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(hbitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                ImageFrame.Source = s;
                 DeleteObject(hbitmap);
             }
             else
@@ -210,7 +212,7 @@ namespace Subtitle_Printer
             {
                 if (lines[currentline].Length != 0)
                 {
-                    Bitmap result = SubtitleDrawer.ImageDrawer.LineBitmap(lines[currentline]);
+                    Bitmap result = ImageDrawer.LineBitmap(lines[currentline]);
                     string text = lines[currentline].Trim();
                     if (text.EndsWith(":") || text.EndsWith("：")) continue;
                     if (text.Contains("%")) text = text.Split('%')[0];
@@ -237,7 +239,7 @@ namespace Subtitle_Printer
         private void PrintingFontButton_Click(object sender, RoutedEventArgs e)
         {
             FontDialog fd = new FontDialog();
-            fd.Font = new Font(TextBox.FontFamily.Source, (float)TextBox.FontSize);
+            fd.Font = new Font(ImageDrawer.PrintingFont.Name, ImageDrawer.PrintingFont.Size);
             if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 ImageDrawer.PrintingFont = fd.Font;
@@ -247,7 +249,7 @@ namespace Subtitle_Printer
 
         private void EQSizeButton_Click(object sender, RoutedEventArgs e)
         {
-            var f = new EQSizeWindow(ImageDrawer.pictureBox1, ImageDrawer.EQSize, ImageDrawer.AutoShrink);
+            var f = new EQSizeWindow(ImageDrawer.ImageFrame, ImageDrawer.EQSize, ImageDrawer.AutoShrink);
             f.ShowDialog();
             if (f.DialogResult == System.Windows.Forms.DialogResult.OK)
             {
@@ -283,16 +285,36 @@ namespace Subtitle_Printer
             if (r.DialogResult == System.Windows.Forms.DialogResult.OK)
             {
                 SetImageFrameSize(r.size.Width, r.size.Height);
+                ImageDrawer.ImageFrame = new System.Drawing.Size((int)r.size.Width, (int)r.size.Height);
                 config.ImageResolution = new SizeF((float)r.size.Width, (float)r.size.Height);
+                ShowSubtitle();
             }
         }
 
         private void SetImageFrameSize(double width, double height)
         {
+            var imageFrame = new System.Windows.Controls.Image() { };
+            ImageFieldGrid.MinHeight = height;
+            ImageFieldGrid.MaxHeight = height;
+            ImageGrid.MinWidth = width;
+            ImageGrid.MinHeight = height;
+            ImageGrid.MaxWidth = width;
+            ImageGrid.MaxHeight = height;
+            /*
+            imageFrame.MinWidth = width;
+            imageFrame.MinHeight = height;
+            imageFrame.MaxWidth = width;
+            imageFrame.MaxHeight = height;
+            ImageFrame = imageFrame;
+            */
             ImageFrame.MinWidth = width;
             ImageFrame.MinHeight = height;
             ImageFrame.MaxWidth = width;
             ImageFrame.MaxHeight = height;
+            
+            var thickness = MainGrid.Margin;
+            thickness.Bottom = ImageFieldGrid.MaxHeight;
+            MainGrid.Margin = thickness;
         }
 
         private void SetAlignmentRadioButton(Alignment alignment)

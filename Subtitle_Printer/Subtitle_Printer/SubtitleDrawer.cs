@@ -18,7 +18,7 @@ namespace Subtitle_Printer
         internal static class ImageDrawer
         {
             internal static Font PrintingFont;
-            internal static Size pictureBox1;
+            internal static Size ImageFrame;
             internal static Alignment Alignment;
             internal static double EQSize;
             internal static bool AutoShrink;
@@ -64,24 +64,10 @@ namespace Subtitle_Printer
             {
                 string temp = text.Trim();
                 if (temp == "") return null;
-                PointF pt = new PointF(0, pictureBox1.Height / 2);
-                var strfmt = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                /*switch (Alignment)
-                {
-                    case Alignment.Left:
-                        strfmt.Alignment = StringAlignment.Near;
-                        break;
-                    case Alignment.Center:
-                        strfmt.Alignment = StringAlignment.Center;
-                        pt = new PointF(pictureBox1.Width / 2, pictureBox1.Height / 2);
-                        break;
-                    case Alignment.Right:
-                        strfmt.Alignment = StringAlignment.Far;
-                        pt = new PointF(pictureBox1.Width, pictureBox1.Height / 2);
-                        break;
-                }*/
-                SizeF size = new SizeF(pictureBox1.Width, pictureBox1.Height);
-                Bitmap canvas;
+                PointF pt = new PointF(0, 0);
+                var strfmt = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
+                SizeF size = new SizeF(ImageFrame.Width, ImageFrame.Height);
+                Bitmap canvas = null;
                 bool gotsize = false;
                 while (true)
                 {
@@ -95,13 +81,14 @@ namespace Subtitle_Printer
                             //g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                             g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
                             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-                            //文字列を位置pt、黒で表示
-                            g.DrawString(text, fnt, Brushes.Black, pt, strfmt);
-                            if (gotsize) break;
                             //画像サイズを取得
                             var s = g.MeasureString(text, fnt);
                             if (s.Width == 0) break;
-                            size = s;
+                            size.Width = s.Width;
+                            pt = new PointF(0,(ImageFrame.Height - s.Height) / 2);
+                            //文字列を位置pt、黒で表示
+                            g.DrawString(text, fnt, Brushes.Black, pt, strfmt);
+                            if (gotsize) break;
                             gotsize = true;
                             canvas.Dispose();
                         }
@@ -114,12 +101,12 @@ namespace Subtitle_Printer
             internal static Bitmap Shrink(Bitmap bm)
             {
                 Bitmap result = null;
-                var width = bm.Width * (int)(bm.Height / (pictureBox1.Height * 0.95));
-                result = new Bitmap(width, (int)(pictureBox1.Height * 0.95));
+                var width = bm.Width * (int)(bm.Height / (ImageFrame.Height));
+                result = new Bitmap(width, (int)(ImageFrame.Height));
                 using (var g = Graphics.FromImage(result))
                 {
                     g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.DrawImage(bm, 0, 0, width, (int)(pictureBox1.Height * 0.95));
+                    g.DrawImage(bm, 0, 0, width, (int)(ImageFrame.Height));
                 }
                 return result;
             }
@@ -172,10 +159,10 @@ namespace Subtitle_Printer
                 sections.RemoveAll(x => x.Image == null || x.Image.Width == 0);
                 foreach (var s in sections)
                 {
-                    if (s.Image.Height > pictureBox1.Height && ImageDrawer.AutoShrink) { s.ShrinkImage(); }
+                    if (s.Image.Height > ImageFrame.Height && ImageDrawer.AutoShrink) { s.ShrinkImage(); }
                 }
                 if (sections.Sum(x => x.Image.Width) == 0) { return result; }
-                result = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                result = new Bitmap(ImageFrame.Width, ImageFrame.Height);
                 using (Graphics g = Graphics.FromImage(result))
                 {
                     int xpos = 0;
@@ -185,10 +172,10 @@ namespace Subtitle_Printer
                             xpos = 0;
                             break;
                         case Alignment.Center:
-                            xpos = (pictureBox1.Width - sections.Sum(x => x.Image.Width)) / 2;
+                            xpos = (ImageFrame.Width - sections.Sum(x => x.Image.Width)) / 2;
                             break;
                         case Alignment.Right:
-                            xpos = pictureBox1.Width;
+                            xpos = ImageFrame.Width;
                             sections.Reverse();
                             break;
                     }
