@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -71,7 +72,8 @@ namespace Subtitle_Printer
             TextBoxLineNumber.TextView = TextBox.TextArea.TextView;
             TextBoxLineNumber.VerticalTabs = TextBox.VerticalTabs;
             FileName = noTitle;
-            using (var reader = new XmlTextReader("ProjectZTexDef.xshd"))
+            var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("Subtitle_Printer.ProjectZTexDef.xshd");
+            using (var reader = new XmlTextReader(s))
             {
                 TextBox.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
             }
