@@ -158,7 +158,7 @@ namespace Subtitle_Printer
             linePrintTimer.Enabled = false;
             linePrintTimer.Enabled = true;
         }
-        
+
         private void TextBox_GotMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
         {
             linePrintTimer.Enabled = false;
@@ -189,9 +189,10 @@ namespace Subtitle_Printer
 
         private bool SaveTextFile()
         {
-            var result =Path.GetFullPath(TextBox.SaveVerticalTabText(FileName));
+            var result = TextBox.SaveVerticalTabText(FileName);
             if (result != "")
             {
+                result = Path.GetFullPath(result);
                 FileName = result;
                 SetStatusBarLabelContent(String.Format("{0}を保存しました", result));
                 return true;
@@ -204,8 +205,13 @@ namespace Subtitle_Printer
 
         private void LoadTextFile()
         {
-            FileName = Path.GetFullPath(TextBox.LoadVerticalTabText());
-            SetStatusBarLabelContent(String.Format("{0}を読み込みました", FileName));
+            var result = TextBox.LoadVerticalTabText();
+            if (result != "")
+            {
+                result = Path.GetFullPath(result);
+                FileName = result;
+                SetStatusBarLabelContent(String.Format("{0}を読み込みました", FileName));
+            }
         }
 
         private void SaveSubtitles()
@@ -232,7 +238,7 @@ namespace Subtitle_Printer
                     if (text.Contains("%")) text = text.Split('%')[0];
                     else if (text.Contains("％")) text = text.Split('％')[0];
                     if (text == "") continue;
-                    if (result != null) result.Save(Path.Combine(di.FullName,String.Format("Line{0}.bmp", lineIndexes.ElementAt(currentline))));
+                    if (result != null) result.Save(Path.Combine(di.FullName, String.Format("Line{0}.bmp", lineIndexes.ElementAt(currentline))));
                 }
             }
             SetStatusBarLabelContent(String.Format("字幕を保存しました"));
@@ -322,7 +328,7 @@ namespace Subtitle_Printer
             ImageFrame.MinHeight = height;
             ImageFrame.MaxWidth = width;
             ImageFrame.MaxHeight = height;
-            
+
             var thickness = MainGrid.Margin;
             thickness.Bottom = ImageFieldGrid.MaxHeight + statusBar.ActualHeight;
             MainGrid.Margin = thickness;
