@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="EQSizeWindow" Height="341.035" Width="655.309" Loaded="Window_Loaded">
     <Grid>
-        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="23" Margin="10,49,0,0" TextWrapping="Wrap" Text="15" VerticalAlignment="Top" Width="58" TextChanged="textBox1_TextChanged"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="23" Margin="10,49,0,0" TextWrapping="Wrap" Text="15" VerticalAlignment="Top" Width="58" TextChanged="TextBox1_TextChanged"/>
         <Button Content="↑" Name="UpButton" HorizontalAlignment="Left" Margin="10,23,0,0" VerticalAlignment="Top" Width="58" Click="UpButton_Click"/>
         <Button Content="↓" Name="DownButton" HorizontalAlignment="Left" Margin="10,77,0,0" VerticalAlignment="Top" Width="58" Click="DownButton_Click"/>
         <CheckBox Name="CheckBox" Content="自動収縮" HorizontalAlignment="Left" Margin="132,28,0,0" VerticalAlignment="Top"/>

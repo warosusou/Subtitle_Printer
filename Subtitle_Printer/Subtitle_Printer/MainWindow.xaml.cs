@@ -35,7 +35,7 @@ namespace Subtitle_Printer
     public partial class MainWindow : Window
     {
         [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        public static extern bool DeleteObject(IntPtr hObject);
+        private static extern bool DeleteObject(IntPtr hObject);
 
         public string FileName { get { return filename; } private set { filename = value; this.Title = FileName; } }
         private string filename;
@@ -85,7 +85,7 @@ namespace Subtitle_Printer
             this.MinHeight = 230;
             if (config.ImageResolution == new SizeF())
             {
-                config.ImageResolution = new SizeF((float)ImageGrid.ActualWidth, (float)ImageGrid.ActualHeight);
+                config.ImageResolution = new SizeF(400, 120);
                 Config.SaveConfig(configPath, config);
             }
 
@@ -212,7 +212,6 @@ namespace Subtitle_Printer
         {
             if (this.FileName == noTitle && !SaveTextFile()) return;
             var di = Directory.CreateDirectory(System.IO.Path.Combine(Path.GetDirectoryName(this.FileName), "Subtitles"));
-            List<string> files = new List<string>();
             Regex r = new Regex(@"Line\d*\.bmp");
             foreach (var f in di.GetFiles("*.bmp"))
             {
@@ -241,8 +240,10 @@ namespace Subtitle_Printer
 
         private void EditorFontButton_Click(object sender, RoutedEventArgs e)
         {
-            FontDialog fd = new FontDialog();
-            fd.Font = new Font(TextBox.FontFamily.Source, (float)TextBox.FontSize);
+            FontDialog fd = new FontDialog
+            {
+                Font = new Font(TextBox.FontFamily.Source, (float)TextBox.FontSize)
+            };
             if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 TextBox.FontFamily = new System.Windows.Media.FontFamily(fd.Font.Name);
@@ -254,8 +255,10 @@ namespace Subtitle_Printer
 
         private void PrintingFontButton_Click(object sender, RoutedEventArgs e)
         {
-            FontDialog fd = new FontDialog();
-            fd.Font = new Font(ImageDrawer.PrintingFont.Name, ImageDrawer.PrintingFont.Size);
+            FontDialog fd = new FontDialog
+            {
+                Font = new Font(ImageDrawer.PrintingFont.Name, ImageDrawer.PrintingFont.Size)
+            };
             if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 ImageDrawer.PrintingFont = fd.Font;
@@ -300,9 +303,9 @@ namespace Subtitle_Printer
             r.ShowDialog();
             if (r.DialogResult == System.Windows.Forms.DialogResult.OK)
             {
-                SetImageFrameSize(r.size.Width, r.size.Height);
-                ImageDrawer.ImageFrame = new System.Drawing.Size((int)r.size.Width, (int)r.size.Height);
-                config.ImageResolution = new SizeF((float)r.size.Width, (float)r.size.Height);
+                SetImageFrameSize(r.ImageSize.Width, r.ImageSize.Height);
+                ImageDrawer.ImageFrame = new System.Drawing.Size((int)r.ImageSize.Width, (int)r.ImageSize.Height);
+                config.ImageResolution = new SizeF((float)r.ImageSize.Width, (float)r.ImageSize.Height);
                 ShowSubtitle();
             }
         }

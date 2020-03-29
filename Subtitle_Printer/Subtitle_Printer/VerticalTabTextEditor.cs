@@ -55,14 +55,16 @@ namespace Subtitle_Printer
             for (int i = 0; i < lines.Count(); i++)
             {
                 if (this.VerticalTabs.ElementAt(i))
-                    lines[i].Append('\v');
+                    lines[i]  +="\v";
                 sb.AppendLine(lines[i]);
             }
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.FilterIndex = 1;
-            saveFileDialog.Filter = "テキスト ファイル(.txt)|*.txt";
-            saveFileDialog.InitialDirectory = Environment.CurrentDirectory;
-            saveFileDialog.FileName = fileName;
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                FilterIndex = 1,
+                Filter = "テキスト ファイル(.txt)|*.txt",
+                InitialDirectory = Environment.CurrentDirectory,
+                FileName = fileName
+            };
             bool? result = saveFileDialog.ShowDialog();
             if (result == true)
             {
@@ -79,10 +81,12 @@ namespace Subtitle_Printer
         public string LoadVerticalTabText()
         {
             string loadedText = "";
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.FilterIndex = 1;
-            openFileDialog.Filter = "テキスト ファイル(.txt)|*.txt";
-            openFileDialog.InitialDirectory = Environment.CurrentDirectory;
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                FilterIndex = 1,
+                Filter = "テキスト ファイル(.txt)|*.txt",
+                InitialDirectory = Environment.CurrentDirectory
+            };
             bool? result = openFileDialog.ShowDialog();
             if (result == true)
             {
@@ -92,21 +96,27 @@ namespace Subtitle_Printer
                     StreamReader sr = new StreamReader(fileStream, true);
                     loadedText = sr.ReadToEnd();
                 }
-                var lines = loadedText.Replace("\n", "").Split(Environment.NewLine.ToCharArray()).Reverse();
+                var lines = loadedText.Replace("\n", "").Split(Environment.NewLine.ToCharArray()).Reverse().ToList();
+                if (lines.First() == String.Empty) 
+                    lines.RemoveAt(0);
                 this.Text = "";
                 foreach (var line in lines)
                 {
+                    var text = line;
                     if (line.Contains('\v'))
                     {
-                        line.Replace("\v", "");
+                        text = line.Replace("\v", "");
                         this.verticalTabs.Insert(0, true);
                     }
                     else
                     {
+                        text = line;
                         this.verticalTabs.Insert(0, false);
                     }
-                    this.Text = this.Text.Insert(0, String.Format("{0}{1}", line, Environment.NewLine));
+                    this.Text = this.Text.Insert(0, String.Format("{0}{1}", text, Environment.NewLine));
                 }
+                if (this.Text.EndsWith(Environment.NewLine)) 
+                    this.Text = this.Text.Substring(0, this.Text.Length - Environment.NewLine.Length);
                 this.UpdateLayout();
                 lineTracker.LineChanged += LineTracker_LineChanged;
                 return openFileDialog.FileName;

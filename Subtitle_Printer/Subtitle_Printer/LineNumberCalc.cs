@@ -48,11 +48,11 @@ namespace Subtitle_Printer
                 string format = "{0}-{1}";
                 if (alphaNum < 0)
                     format = "{0}";
-                yield return String.Format(format, lineNumber.ToString(CultureInfo.CurrentCulture), alphabetCalc(alphaNum));
+                yield return String.Format(format, lineNumber.ToString(CultureInfo.CurrentCulture), AlphabetCalc(alphaNum));
             }
         }
 
-        public static string alphabetCalc(int num)
+        public static string AlphabetCalc(int num)
         {
             if (num == -1) return "";
             string result = "";

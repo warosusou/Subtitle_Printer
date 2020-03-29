@@ -64,10 +64,10 @@ namespace Subtitle_Printer
             {
                 string temp = text.Trim();
                 if (temp == "") return null;
-                PointF pt = new PointF(0, 0);
+                PointF pt;
                 var strfmt = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
                 SizeF size = new SizeF(ImageFrame.Width, ImageFrame.Height);
-                Bitmap canvas = null;
+                Bitmap canvas;
                 bool gotsize = false;
                 while (true)
                 {
@@ -100,9 +100,8 @@ namespace Subtitle_Printer
 
             internal static Bitmap Shrink(Bitmap bm)
             {
-                Bitmap result = null;
                 var width = bm.Width * (int)(bm.Height / (ImageFrame.Height));
-                result = new Bitmap(width, (int)(ImageFrame.Height));
+                var result = new Bitmap(width, (int)(ImageFrame.Height));
                 using (var g = Graphics.FromImage(result))
                 {
                     g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;

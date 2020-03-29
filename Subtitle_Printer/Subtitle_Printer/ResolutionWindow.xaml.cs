@@ -23,17 +23,17 @@ namespace Subtitle_Printer
     {
         public new DialogResult DialogResult { get { return result; } private set { result = value; this.Close(); } }
         private DialogResult result;
-        public Size size { get; private set; }
+        public Size ImageSize { get; private set; }
         public ResolutionWindow()
         {
             InitializeComponent();
-            this.size = new Size();
+            this.ImageSize = new Size();
         }
 
         public ResolutionWindow(Size size)
         {
             InitializeComponent();
-            this.size = size;
+            this.ImageSize = size;
             textBox1.Text = size.Height.ToString();
             textBox2.Text = size.Width.ToString();
         }
@@ -42,7 +42,7 @@ namespace Subtitle_Printer
         {
             if (Int32.TryParse(textBox1.Text, out int h) && Int32.TryParse(textBox2.Text, out int w))
             {
-                this.size = new Size(w, h);
+                this.ImageSize = new Size(w, h);
                 DialogResult = DialogResult.OK;
             }
             else

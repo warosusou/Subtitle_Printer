@@ -21,7 +21,7 @@ namespace Subtitle_Printer
     public partial class EQSizeWindow : Window
     {
         [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        public static extern bool DeleteObject(IntPtr hObject);
+        private static extern bool DeleteObject(IntPtr hObject);
         public new DialogResult DialogResult { get { return result; } private set { result = value; this.Close(); } }
         private DialogResult result;
         private System.Drawing.Size picturebox1Size;
@@ -100,7 +100,7 @@ namespace Subtitle_Printer
             }
         }
 
-        private void textBox1_TextChanged(object sender, TextChangedEventArgs e)
+        private void TextBox1_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (pictureBox1 == null) return;
             if (Double.TryParse(textBox1.Text, out var size))

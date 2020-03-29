@@ -59,15 +59,5 @@ namespace Subtitle_Printer.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   型 System.Byte[] のローカライズされたリソースを検索します。
-        /// </summary>
-        internal static byte[] ProjectZTexDef {
-            get {
-                object obj = ResourceManager.GetObject("ProjectZTexDef", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }
